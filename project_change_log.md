@@ -127,3 +127,8 @@
 - Imported TOEFL-relevant vocabulary from exported OneNote PDF notes into the vocabulary bank.
 - Added separate speaking and reading note topics so the generator can draw from the new material without disturbing the existing core set.
 - Kept the prefix hint behavior in place so the new, larger vocabulary bank still feels approachable.
+
+### Vocabulary Enter Flow Safety - 2026-06-21
+- Changed vocabulary spelling input so the first Enter submits the answer and the second Enter advances to the next prompt.
+- Added an explicit waiting state to prevent repeated Enter presses from re-submitting the same question and inflating accuracy.
+- Added a regression test for the Enter state transition.

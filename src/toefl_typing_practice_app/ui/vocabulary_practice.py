@@ -27,6 +27,7 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.history = PracticeHistoryStore(get_data_dir())
         self.current_prompt: VocabularyPrompt | None = None
         self.session_started_at: float | None = None
+        self.awaiting_next_prompt = False
         self.correct_count = 0
         self.wrong_count = 0
         self.review_plan = PracticeReviewPlan(note="Start a vocabulary session to build a personalized review plan.")
@@ -66,7 +67,7 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.new_button = ttk.Button(controls, text="New Prompt", command=self.start_new_prompt)
         self.new_button.grid(row=0, column=0, padx=(0, 8))
 
-        self.submit_button = ttk.Button(controls, text="Check Answer", command=self.submit_response)
+        self.submit_button = ttk.Button(controls, text="Check Answer", command=self._handle_submit_or_next)
         self.submit_button.grid(row=0, column=1)
 
         prompt_box = ttk.LabelFrame(self, text="Prompt")
@@ -135,6 +136,7 @@ class VocabularyPracticeFrame(ttk.Frame):
             preferred_prompt_type=self.review_plan.vocab_prompt_type,
         )
         self.session_started_at = time.perf_counter()
+        self.awaiting_next_prompt = False
         self._set_prompt_text(self.current_prompt.prompt_text)
         self.topic_label.configure(text=f"Topic: {self.current_prompt.topic}")
         self.prompt_type_label.configure(text=f"Prompt type: {self.current_prompt.prompt_type.replace('_', ' ').title()}")
@@ -144,6 +146,7 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.result_label.configure(text="A fresh vocabulary item is ready.")
         self.example_label.configure(text="Example sentence: " + self.current_prompt.example)
         self.review_label.configure(text=self.review_plan.note)
+        self.submit_button.configure(text="Check Answer")
         self._refresh_stats()
 
     def submit_response(self) -> VocabularyScoringResult | None:
@@ -184,6 +187,8 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.prompt_type_label.configure(text=f"Prompt type: {self.current_prompt.prompt_type.replace('_', ' ').title()}")
         self.hint_label.configure(text=f"Hint: starts with '{self.current_prompt.prefix_hint}'")
         self.example_label.configure(text="Example sentence: " + self.current_prompt.example)
+        self.awaiting_next_prompt = True
+        self.submit_button.configure(text="Next Prompt")
         self._save_session(result, elapsed_seconds)
         return result
 
@@ -214,8 +219,16 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.prompt_text.configure(state="disabled")
 
     def _submit_from_keyboard(self, event: tk.Event) -> str:
-        self.submit_response()
+        self._handle_submit_or_next()
         return "break"
+
+    def _handle_submit_or_next(self) -> None:
+        """First Enter checks the answer, second Enter advances to the next prompt."""
+
+        if self.awaiting_next_prompt:
+            self.start_new_prompt()
+            return
+        self.submit_response()
 
     def _save_session(self, result: VocabularyScoringResult, elapsed_seconds: float) -> None:
         if self.current_prompt is None:

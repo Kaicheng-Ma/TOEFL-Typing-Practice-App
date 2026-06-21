@@ -20,6 +20,7 @@ from toefl_typing_practice_app.models import PracticeMode, PracticeSessionRecord
 from toefl_typing_practice_app.services.practice_history import PracticeHistoryStore
 from toefl_typing_practice_app.services.timed_challenge_scoring import score_timed_challenge
 from toefl_typing_practice_app.services.typing_analysis import compare_texts
+from toefl_typing_practice_app.ui.vocabulary_practice import VocabularyPracticeFrame
 
 
 class BoundaryCaseTests(unittest.TestCase):
@@ -104,6 +105,20 @@ class BoundaryCaseTests(unittest.TestCase):
                 with self.assertRaises(Exception):
                     create_app()
         fake_root.destroy.assert_called_once()
+
+    def test_vocabulary_enter_action_switches_from_submit_to_next(self) -> None:
+        frame = object.__new__(VocabularyPracticeFrame)
+        frame.awaiting_next_prompt = False
+        with mock.patch.object(frame, "submit_response") as submit_mock, mock.patch.object(frame, "start_new_prompt") as next_mock:
+            frame._handle_submit_or_next()
+        submit_mock.assert_called_once()
+        next_mock.assert_not_called()
+
+        frame.awaiting_next_prompt = True
+        with mock.patch.object(frame, "submit_response") as submit_mock, mock.patch.object(frame, "start_new_prompt") as next_mock:
+            frame._handle_submit_or_next()
+        next_mock.assert_called_once()
+        submit_mock.assert_not_called()
 
 
 if __name__ == "__main__":
