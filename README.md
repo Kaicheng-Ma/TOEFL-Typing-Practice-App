@@ -1,74 +1,176 @@
 # TOEFL Typing Practice App
 
-一个面向 TOEFL 备考场景的英语输入训练应用，聚焦两类核心能力：
+TOEFL Typing Practice App is a Python desktop application for practicing English input accuracy in TOEFL-style writing situations.
 
-1. 作文 section 的打字准确性。
-2. 词汇拼写与回忆能力。
+The project is designed around one simple idea: every practice session should feel fresh, while still training the specific weak points that matter most for TOEFL preparation.
 
-项目的目标不是简单跟打，而是通过动态生成练习内容、错题回流和计时挑战，让每次训练都尽量不同，并逐步贴近用户自己的薄弱点。
+## What This App Is For
 
-## 核心模式
+This app focuses on two core skills:
 
-### 1. 作文打字模式
+1. Essay typing accuracy for TOEFL writing tasks.
+2. Vocabulary spelling accuracy for word-level recall and input precision.
 
-用于训练长文本输入能力，重点关注：
+It is not just a fixed typing drill. The app is intended to generate practice content dynamically, recycle user mistakes intelligently, and support timed challenges so that practice stays useful over time.
 
-- 单词拼写
-- 标点
-- 大小写
-- 漏字、多字、错字
-- 长句输入稳定性
+## Core Practice Modes
 
-### 2. 词汇拼写模式
+### 1. Essay Typing Mode
 
-用于训练单词拼写和记忆回忆，支持：
+This mode is for long-form English input practice.
 
-- 中文释义 -> 英文单词
-- 英文释义 -> 单词
-- 例句挖空
-- 词根词缀提示
+Main training goals:
 
-### 3. 计时挑战模式
+- Correct spelling
+- Correct punctuation
+- Correct capitalization
+- Fewer missing or extra characters
+- Better stability on long sentences and paragraph-like content
 
-作文打字模式下的子模式，用于在限定时间内完成更多内容或条目，同时兼顾准确率。
+This mode is meant to resemble the typing pressure a learner faces when writing TOEFL essays.
 
-## 内容来源
+### 2. Vocabulary Spelling Mode
 
-练习素材会优先围绕以下方向生成和组织：
+This mode is for single-word or short-answer spelling practice.
 
-- 邮件场景
-- 学术讨论
-- TOEFL 必备词汇库
-- TOEFL 常见写作表达
-- 常见标点与长难句结构
+Supported prompt styles:
 
-## 设计原则
+- Chinese meaning to English word
+- English definition to word
+- Sentence cloze completion
+- Word-root or prefix/suffix hints
 
-- 每次练习尽量不同，而不是固定文本重复。
-- 使用受约束的随机生成，而不是纯随机。
-- 把用户高频错误回流到后续练习中。
-- 通过难度分层，让训练节奏可控。
+This mode helps learners strengthen spelling recall before those mistakes show up in writing.
 
-## 当前状态
+### 3. Timed Challenge Mode
 
-当前仓库仍处于初始化和方案整理阶段，后续会按分阶段制作计划逐步实现：
+This is a sub-mode inside Essay Typing Mode.
 
-- 项目骨架
-- 作文打字主模式
-- 词汇拼写模式
-- 计时挑战模式
-- 个性化回流
-- 统计与体验优化
+It is designed for time-limited performance practice:
 
-## 本地制作指导
+- Type as much content as possible within a fixed time
+- Or complete as many entries as possible within the time limit
+- Keep accuracy high while increasing speed
 
-本仓库的本地开发节奏和细化规则写在本地制作指导文件中：
+This mode is meant to train pressure handling, not just raw typing speed.
+
+## Content Strategy
+
+The app is designed to focus on TOEFL-relevant content instead of random typing text.
+
+Planned content sources include:
+
+- Email-style situations
+- Academic discussion content
+- TOEFL high-frequency vocabulary
+- Common TOEFL writing expressions
+- Punctuation-heavy and long-sentence patterns
+
+The long-term goal is to let the app generate varied practice content from these sources instead of relying on fixed passages.
+
+## Design Principles
+
+The project follows these principles:
+
+- Practice content should vary from session to session.
+- Practice generation should be constrained, not purely random.
+- User mistakes should come back later in a controlled way.
+- Difficulty should be layered and adjustable.
+- The app should grow stage by stage instead of trying to solve everything at once.
+
+## Current Status
+
+This repository is still in the early implementation stage.
+
+Completed so far:
+
+- Project goals and scope definition
+- Local implementation guide
+- Stage-based development plan
+- Repository changelog
+- Stage 1 application skeleton
+- Basic Python package structure
+
+## Development Stages
+
+The implementation plan is intentionally split into stages to keep the work manageable.
+
+Current stage plan:
+
+1. Stage 0: Project skeleton confirmation
+2. Stage 1: Core framework setup
+3. Stage 2: Essay typing mode
+4. Stage 3: Vocabulary spelling mode
+5. Stage 4: Timed challenge mode
+6. Stage 5: Personalization and mistake review
+7. Stage 6: Statistics and UX polish
+
+The detailed stage rules live in the local implementation guide.
+
+## Local Implementation Guide
+
+The repository includes a local-only implementation guide that drives the actual build process:
 
 - [LOCAL_IMPLEMENTATION_GUIDE.md](LOCAL_IMPLEMENTATION_GUIDE.md)
 
-该文件用于本地协作与制作指导，不作为对外发布材料。
+This file is intended for local development workflow and should not be treated as the public-facing project description.
 
-## 开发目标
+## Project Structure
 
-后续实现会优先采用 Python，界面和存储方式会根据阶段逐步确定。当前重点是先把核心训练逻辑和内容生成体系搭起来，再逐步完善界面与统计。
+The current codebase uses a `src` layout:
+
+- `pyproject.toml` for project metadata and packaging
+- `src/toefl_typing_practice_app/` for the Python package
+- `src/toefl_typing_practice_app/app.py` for application bootstrap
+- `src/toefl_typing_practice_app/ui/` for UI components
+- `project_change_log.md` for repository-level change tracking
+
+## Requirements
+
+Planned minimum environment:
+
+- Python 3.11 or newer
+- A desktop environment capable of running Tkinter-based applications
+
+The UI layer currently uses Tkinter for the initial skeleton because it is lightweight and built into standard Python distributions.
+
+## Running the App
+
+At the moment the project is still a skeleton, but the intended launch command is:
+
+```bash
+python -m toefl_typing_practice_app
+```
+
+Or, once packaging is finalized:
+
+```bash
+toefl-typing-practice
+```
+
+## What Will Be Added Next
+
+Planned next steps include:
+
+- Real essay typing practice flow
+- Dynamic practice content generation
+- Vocabulary spelling questions
+- Timed challenge flow
+- Mistake tracking and review logic
+- Session statistics and practice history
+
+## Contributing During Development
+
+This project is being developed in stages. When adding or changing functionality:
+
+1. Check the local implementation guide first.
+2. Keep changes aligned with the current stage.
+3. Record key changes in `project_change_log.md`.
+4. Keep code comments clear and explanatory.
+
+## Repository Notes
+
+This README is the public-facing introduction to the project.
+
+The more detailed build instructions live in the local implementation guide so that development can stay consistent without overloading the public README with implementation details.
 
