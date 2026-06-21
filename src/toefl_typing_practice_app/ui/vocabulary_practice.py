@@ -226,4 +226,9 @@ class VocabularyPracticeFrame(ttk.Frame):
             target_text=self.current_prompt.answer,
             typed_text=result.typed_answer,
         )
-        self.history.append_session(record)
+        try:
+            self.history.append_session(record)
+        except RuntimeError:
+            # Saving should not interrupt the user's session, so we downgrade
+            # persistence problems to a visible note on the page.
+            self.review_label.configure(text="Practice history could not be saved, but your answer was still checked.")

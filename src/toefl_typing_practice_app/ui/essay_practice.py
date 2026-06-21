@@ -197,4 +197,9 @@ class EssayPracticeFrame(ttk.Frame):
             target_text=self.current_prompt.text,
             typed_text=typed_text,
         )
-        self.history.append_session(record)
+        try:
+            self.history.append_session(record)
+        except RuntimeError:
+            # History should never block the practice flow; we keep the result
+            # visible and surface a soft note in the review area instead.
+            self.review_label.configure(text="Practice history could not be saved, but this round still completed normally.")

@@ -14,7 +14,10 @@ class TypingPracticeApp:
 
     def __init__(self, config: AppConfig | None = None) -> None:
         self.config = config or AppConfig()
-        self.root = tk.Tk()
+        try:
+            self.root = tk.Tk()
+        except tk.TclError as exc:
+            raise RuntimeError("Unable to start the desktop UI. Please make sure a graphical display is available.") from exc
         self.root.title(self.config.app_name)
         self.root.geometry(f"{self.config.window_width}x{self.config.window_height}")
         self.root.minsize(self.config.min_window_width, self.config.min_window_height)
@@ -24,8 +27,12 @@ class TypingPracticeApp:
         # The data directory is created early so future stages can persist content
         # without having to duplicate path bootstrap logic.
         self.data_dir = get_data_dir()
-        self.main_window = MainWindow(self.root, self.config)
-        self.main_window.grid(row=0, column=0, sticky="nsew")
+        try:
+            self.main_window = MainWindow(self.root, self.config)
+            self.main_window.grid(row=0, column=0, sticky="nsew")
+        except Exception:
+            self.root.destroy()
+            raise
 
     def run(self) -> None:
         """Start the Tk event loop."""
@@ -37,4 +44,3 @@ def create_app() -> TypingPracticeApp:
     """Factory used by scripts, tests, and the console entry point."""
 
     return TypingPracticeApp()
-

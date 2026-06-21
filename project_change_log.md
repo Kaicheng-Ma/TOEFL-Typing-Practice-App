@@ -104,3 +104,9 @@
 1. Redesign essay, vocabulary, and timed challenge pages into clearer cards with stronger visual hierarchy.
 2. Upgrade review center and stats dashboard into labeled sections so the user can scan overview, history, and trend data more quickly.
 3. Add a visible shortcut hint row and a clearer prompt state area on the main practice page.
+
+### Testing and Error Handling
+1. Hardened local history loading so invalid JSON, non-list payloads, and malformed session records are skipped safely.
+2. Made history saving fail loudly with a friendly RuntimeError while the practice pages downgrade save failures to non-blocking notes.
+3. Added unittest coverage for history storage, generators, scoring, and statistics to protect the app's core flows.
+4. Added a startup guard so missing desktop display support raises a clearer RuntimeError.

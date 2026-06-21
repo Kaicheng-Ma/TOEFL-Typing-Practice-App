@@ -300,4 +300,8 @@ class TimedChallengeFrame(ttk.Frame):
             target_text=self.current_prompt.text,
             typed_text=typed_text,
         )
-        self.history.append_session(record)
+        try:
+            self.history.append_session(record)
+        except RuntimeError:
+            # Keep the challenge result visible even if persistence fails.
+            self.review_label.configure(text="Practice history could not be saved, but the challenge result is still available.")

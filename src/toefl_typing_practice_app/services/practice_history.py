@@ -31,29 +31,20 @@ class PracticeHistoryStore:
 
         try:
             payload = json.loads(self.file_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
+        except (OSError, json.JSONDecodeError):
+            return []
+
+        if not isinstance(payload, list):
             return []
 
         sessions: list[PracticeSessionRecord] = []
         for item in payload:
-            sessions.append(
-                PracticeSessionRecord(
-                    mode=PracticeMode(item["mode"]),
-                    created_at=item.get("created_at", ""),
-                    title=item.get("title", ""),
-                    topic=item.get("topic", ""),
-                    accuracy=float(item.get("accuracy", 0.0)),
-                    elapsed_seconds=float(item.get("elapsed_seconds", 0.0)),
-                    completed_items=int(item.get("completed_items", 0)),
-                    score=int(item.get("score", 0)),
-                    challenge_type=item.get("challenge_type", ""),
-                    prompt_type=item.get("prompt_type", ""),
-                    typo_count=int(item.get("typo_count", 0)),
-                    note=item.get("note", ""),
-                    target_text=item.get("target_text", ""),
-                    typed_text=item.get("typed_text", ""),
-                )
-            )
+            if not isinstance(item, dict):
+                continue
+            try:
+                sessions.append(self._session_from_payload(item))
+            except (TypeError, ValueError, KeyError):
+                continue
         return sessions
 
     def append_session(self, record: PracticeSessionRecord) -> None:
@@ -61,10 +52,13 @@ class PracticeHistoryStore:
 
         sessions = self.load_sessions()
         sessions.append(record)
-        self.file_path.write_text(
-            json.dumps([self._serialize_session(session) for session in sessions], ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+        payload = json.dumps([self._serialize_session(session) for session in sessions], ensure_ascii=False, indent=2)
+        temp_path = self.file_path.with_suffix(".tmp")
+        try:
+            temp_path.write_text(payload, encoding="utf-8")
+            temp_path.replace(self.file_path)
+        except OSError as exc:
+            raise RuntimeError("Unable to save practice history locally.") from exc
 
     def recent_sessions(self, limit: int = 12) -> list[PracticeSessionRecord]:
         """Return the most recent sessions."""
@@ -97,6 +91,29 @@ class PracticeHistoryStore:
             challenge_type=challenge_type,
         )
 
+    def _session_from_payload(self, item: dict[str, Any]) -> PracticeSessionRecord:
+        """Coerce a JSON payload into a session record with safe fallbacks."""
+
+        mode_value = str(item.get("mode", ""))
+        mode = PracticeMode(mode_value)
+
+        return PracticeSessionRecord(
+            mode=mode,
+            created_at=str(item.get("created_at", "")),
+            title=str(item.get("title", "")),
+            topic=str(item.get("topic", "")),
+            accuracy=float(item.get("accuracy", 0.0)),
+            elapsed_seconds=float(item.get("elapsed_seconds", 0.0)),
+            completed_items=int(item.get("completed_items", 0)),
+            score=int(item.get("score", 0)),
+            challenge_type=str(item.get("challenge_type", "")),
+            prompt_type=str(item.get("prompt_type", "")),
+            typo_count=int(item.get("typo_count", 0)),
+            note=str(item.get("note", "")),
+            target_text=str(item.get("target_text", "")),
+            typed_text=str(item.get("typed_text", "")),
+        )
+
     def _serialize_session(self, record: PracticeSessionRecord) -> dict[str, Any]:
         payload = asdict(record)
         payload["mode"] = record.mode.value
@@ -110,7 +127,15 @@ class PracticeHistoryStore:
         topic_scores: dict[str, list[float]] = {}
         for session in sessions:
             topic_scores.setdefault(session.topic, []).append(session.accuracy)
-        return min(topic_scores.items(), key=lambda item: sum(item[1]) / len(item[1]))[0]
+
+        scored_topics = [
+            (topic, sum(scores) / len(scores))
+            for topic, scores in topic_scores.items()
+            if topic
+        ]
+        if not scored_topics:
+            return ""
+        return min(scored_topics, key=lambda item: item[1])[0]
 
     @staticmethod
     def _most_common_field(sessions: list[PracticeSessionRecord], field_name: str) -> str:
@@ -139,4 +164,3 @@ class PracticeHistoryStore:
         if timed_sessions and timed_sessions[-1].accuracy < 90:
             return "Timed challenge review: keep speed steady while protecting accuracy."
         return "Keep rotating between modes to strengthen recall and typing stability."
-
