@@ -84,3 +84,8 @@
 1. 新建 `services/practice_statistics.py`，用于把历史 session 汇总成整体准确率、模式表现、趋势和强弱模式。
 2. 扩展 `ui/main_window.py` 的入口结构，为后续统计面板预留独立展示点。
 3. 使用 `python -m compileall src` 和简单的统计样本验证，确认统计汇总逻辑可用。
+
+### Stage 6 统计 UI 与体验优化
+1. 新建 `ui/stats_dashboard.py`，用于展示总会话数、整体准确率、模式表现和最近趋势。
+2. 重写 `ui/main_window.py`，新增 Stats Dashboard 入口并将 Stage 6 设为可见的独立统计页面。
+3. 继续沿用本地历史，确保统计页面和复习中心展示的数据来自同一份会话记录。

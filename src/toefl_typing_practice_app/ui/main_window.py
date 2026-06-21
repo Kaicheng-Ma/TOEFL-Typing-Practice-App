@@ -13,6 +13,7 @@ from ..config import AppConfig
 from ..models import PracticeMode
 from .essay_practice import EssayPracticeFrame
 from .review_center import ReviewCenterFrame
+from .stats_dashboard import StatsDashboardFrame
 from .vocabulary_practice import VocabularyPracticeFrame
 from .timed_challenge import TimedChallengeFrame
 
@@ -49,6 +50,7 @@ class MainWindow(ttk.Frame):
         ttk.Label(sidebar, text="Practice Modes", font=("Segoe UI", 11, "bold")).pack(anchor="w")
 
         ttk.Button(sidebar, text="Review Center", command=self.show_review_center).pack(fill="x", pady=(8, 6))
+        ttk.Button(sidebar, text="Stats Dashboard", command=self.show_stats_dashboard).pack(fill="x", pady=(0, 6))
 
         mode_specs = [
             (PracticeMode.ESSAY_TYPING, "Essay Typing"),
@@ -84,6 +86,8 @@ class MainWindow(ttk.Frame):
         self._build_mode_views()
         self.review_view = ReviewCenterFrame(self.content_host)
         self.review_view.grid(row=0, column=0, sticky="nsew")
+        self.stats_view = StatsDashboardFrame(self.content_host)
+        self.stats_view.grid(row=0, column=0, sticky="nsew")
         self.show_mode(PracticeMode.ESSAY_TYPING)
 
         footer = ttk.Label(
@@ -137,6 +141,13 @@ class MainWindow(ttk.Frame):
         self.review_view.refresh()
         self.review_view.tkraise()
         self.stage_label.configure(text="Stage 5: review center and personalization data are now active.")
+
+    def show_stats_dashboard(self) -> None:
+        """Show the statistics dashboard and refresh its content."""
+
+        self.stats_view.refresh()
+        self.stats_view.tkraise()
+        self.stage_label.configure(text="Stage 6: statistics and UX polish are now active.")
 
     @staticmethod
     def _stage_message(mode: PracticeMode) -> str:
