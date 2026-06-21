@@ -78,6 +78,8 @@ class ReviewCenterFrame(ttk.Frame):
         return " ".join(pieces)
 
     def _format_sessions(self, sessions) -> str:
+        """Render a short text block so users can scan recent practice quickly."""
+
         if not sessions:
             return "No session history has been recorded yet."
 
@@ -94,4 +96,3 @@ class ReviewCenterFrame(ttk.Frame):
         self.sessions_text.delete("1.0", tk.END)
         self.sessions_text.insert("1.0", text)
         self.sessions_text.configure(state="disabled")
-

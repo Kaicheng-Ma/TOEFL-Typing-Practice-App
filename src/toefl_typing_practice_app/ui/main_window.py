@@ -64,7 +64,7 @@ class MainWindow(ttk.Frame):
         content = ttk.Frame(self, relief="groove", padding=16)
         content.grid(row=1, column=1, sticky="nsew", pady=(16, 0))
         content.columnconfigure(0, weight=1)
-        content.rowconfigure(2, weight=1)
+        content.rowconfigure(3, weight=1)
 
         ttk.Label(content, text="Current Stage", font=("Segoe UI", 11, "bold")).grid(
             row=0, column=0, sticky="w"
@@ -78,8 +78,19 @@ class MainWindow(ttk.Frame):
         )
         self.stage_label.grid(row=1, column=0, sticky="nw", pady=(8, 12))
 
+        # A compact context line helps the user understand what action the
+        # current panel expects without reading the whole page.
+        self.context_label = ttk.Label(
+            content,
+            text="Choose a practice mode to start a focused session.",
+            wraplength=520,
+            justify="left",
+            foreground="#4d4d4d",
+        )
+        self.context_label.grid(row=2, column=0, sticky="nw", pady=(0, 12))
+
         self.content_host = ttk.Frame(content)
-        self.content_host.grid(row=2, column=0, sticky="nsew")
+        self.content_host.grid(row=3, column=0, sticky="nsew")
         self.content_host.columnconfigure(0, weight=1)
         self.content_host.rowconfigure(0, weight=1)
 
@@ -134,6 +145,7 @@ class MainWindow(ttk.Frame):
         if view is not None:
             view.tkraise()
         self.stage_label.configure(text=self._stage_message(mode))
+        self.context_label.configure(text=self._context_message(mode))
 
     def show_review_center(self) -> None:
         """Show the review dashboard and refresh its content."""
@@ -141,6 +153,7 @@ class MainWindow(ttk.Frame):
         self.review_view.refresh()
         self.review_view.tkraise()
         self.stage_label.configure(text="Stage 5: review center and personalization data are now active.")
+        self.context_label.configure(text="Review the latest sessions and see which topics the app will prioritize next.")
 
     def show_stats_dashboard(self) -> None:
         """Show the statistics dashboard and refresh its content."""
@@ -148,6 +161,7 @@ class MainWindow(ttk.Frame):
         self.stats_view.refresh()
         self.stats_view.tkraise()
         self.stage_label.configure(text="Stage 6: statistics and UX polish are now active.")
+        self.context_label.configure(text="Inspect overall accuracy, mode balance, and recent trend data.")
 
     @staticmethod
     def _stage_message(mode: PracticeMode) -> str:
@@ -156,6 +170,16 @@ class MainWindow(ttk.Frame):
         if mode == PracticeMode.VOCABULARY_SPELLING:
             return "Stage 3: vocabulary spelling practice is now active alongside essay typing."
         return "Stage 4: timed challenge practice is now active with time limits and score-based feedback."
+
+    @staticmethod
+    def _context_message(mode: PracticeMode) -> str:
+        """Explain the immediate task for the selected mode."""
+
+        if mode == PracticeMode.ESSAY_TYPING:
+            return "Essay mode focuses on sentence flow, punctuation, and long-form typing stability."
+        if mode == PracticeMode.VOCABULARY_SPELLING:
+            return "Vocabulary mode focuses on single-word recall and accurate spelling under light pressure."
+        return "Timed challenge mode focuses on speed, completion, and accuracy balance within a fixed window."
 
     @staticmethod
     def _mode_label(mode: PracticeMode) -> str:

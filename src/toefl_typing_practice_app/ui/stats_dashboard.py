@@ -76,6 +76,8 @@ class StatsDashboardFrame(ttk.Frame):
         return " ".join(pieces)
 
     def _render_mode_stats(self, mode_stats) -> None:
+        # Rebuild the mode summary rows each refresh so the dashboard always
+        # reflects the latest history without stale widgets hanging around.
         for child in self.metrics_box.winfo_children():
             child.destroy()
 
@@ -93,4 +95,3 @@ class StatsDashboardFrame(ttk.Frame):
                 justify="left",
             )
             label.pack(anchor="w")
-
