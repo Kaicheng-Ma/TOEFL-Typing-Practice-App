@@ -122,3 +122,8 @@
 - Added a short prefix hint to every vocabulary prompt so spelling practice is less harsh and easier to start.
 - Exposed the prefix hint in the vocabulary practice UI as a dedicated hint line.
 - Added tests to confirm the prefix hint is always generated and matches the answer start.
+
+### Vocabulary Expansion From PDF Notes - 2026-06-21
+- Imported TOEFL-relevant vocabulary from exported OneNote PDF notes into the vocabulary bank.
+- Added separate speaking and reading note topics so the generator can draw from the new material without disturbing the existing core set.
+- Kept the prefix hint behavior in place so the new, larger vocabulary bank still feels approachable.

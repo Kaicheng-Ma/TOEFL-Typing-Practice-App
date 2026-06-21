@@ -9,6 +9,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from toefl_typing_practice_app.content.essay_generator import EssayPromptGenerator
+from toefl_typing_practice_app.content.vocabulary_bank import VOCABULARY_ITEMS
 from toefl_typing_practice_app.content.timed_challenge_bank import TimedChallengePromptGenerator
 from toefl_typing_practice_app.content.vocabulary_bank import VocabularyPromptGenerator
 from toefl_typing_practice_app.services.timed_challenge_scoring import score_timed_challenge
@@ -48,6 +49,11 @@ class GeneratorAndScoringTests(unittest.TestCase):
         prompt = VocabularyPromptGenerator(seed=4).generate(preferred_prompt_type="meaning_to_word")
         result = score_vocab_response(prompt, prompt.answer)
         self.assertTrue(result.is_correct)
+
+    def test_vocabulary_bank_includes_note_topics(self) -> None:
+        topics = {item.topic for item in VOCABULARY_ITEMS}
+        self.assertIn("speaking_notes", topics)
+        self.assertIn("reading_notes", topics)
 
     def test_timed_challenge_scoring_produces_score(self) -> None:
         prompt = TimedChallengePromptGenerator(seed=5).generate("content_sprint", 3)

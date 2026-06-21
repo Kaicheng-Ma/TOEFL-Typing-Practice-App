@@ -15,7 +15,7 @@ if str(SRC_DIR) not in sys.path:
 from toefl_typing_practice_app.app import create_app
 from toefl_typing_practice_app.content.essay_generator import EssayPromptGenerator
 from toefl_typing_practice_app.content.timed_challenge_bank import TimedChallengePromptGenerator
-from toefl_typing_practice_app.content.vocabulary_bank import VocabularyPromptGenerator
+from toefl_typing_practice_app.content.vocabulary_bank import VOCABULARY_ITEMS, VocabularyPromptGenerator
 from toefl_typing_practice_app.models import PracticeMode, PracticeSessionRecord, TimedChallengePrompt
 from toefl_typing_practice_app.services.practice_history import PracticeHistoryStore
 from toefl_typing_practice_app.services.timed_challenge_scoring import score_timed_challenge
@@ -85,8 +85,10 @@ class BoundaryCaseTests(unittest.TestCase):
             preferred_topic="not-a-topic",
             preferred_prompt_type="not-a-style",
         )
-        self.assertIn(essay_prompt.topic, {"email", "academic_discussion", "campus_life"})
-        self.assertIn(vocab_prompt.topic, {"email", "academic_discussion", "campus_life"})
+        essay_topics = {"email", "academic_discussion", "campus_life"}
+        vocab_topics = {item.topic for item in VOCABULARY_ITEMS}
+        self.assertIn(essay_prompt.topic, essay_topics)
+        self.assertIn(vocab_prompt.topic, vocab_topics)
         self.assertTrue(vocab_prompt.prompt_text)
 
     def test_create_app_raises_clear_error_when_display_is_unavailable(self) -> None:
