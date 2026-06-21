@@ -49,6 +49,7 @@ class AccountSessionContext:
     account_dir: Path
     history_store: PracticeHistoryStore
     review_store: VocabularyReviewStore
+    registry: "AccountRegistry"
 
 
 class AccountRegistry:
@@ -131,6 +132,34 @@ class AccountRegistry:
         self.touch_last_login(profile.username)
         return self.find_account(profile.username) or profile
 
+    def update_password(self, username: str, new_password: str = "") -> PracticeAccountProfile:
+        """Set or clear the password for one account."""
+
+        accounts = self.list_accounts()
+        updated_profile: PracticeAccountProfile | None = None
+        for index, profile in enumerate(accounts):
+            if profile.username.strip().lower() != username.strip().lower():
+                continue
+
+            salt_hex = secrets.token_bytes(16).hex() if new_password else ""
+            password_hash = _hash_password(new_password, salt_hex) if new_password else ""
+            updated_profile = PracticeAccountProfile(
+                username=profile.username,
+                slug=profile.slug,
+                password_salt=salt_hex,
+                password_hash=password_hash,
+                created_at=profile.created_at,
+                last_login_at=profile.last_login_at,
+            )
+            accounts[index] = updated_profile
+            break
+
+        if updated_profile is None:
+            raise ValueError("That account does not exist yet.")
+
+        self._save_profiles(accounts)
+        return updated_profile
+
     def touch_last_login(self, username: str) -> None:
         """Update the last login timestamp for one account."""
 
@@ -162,6 +191,7 @@ class AccountRegistry:
             account_dir=account_dir,
             history_store=history_store,
             review_store=review_store,
+            registry=self,
         )
 
     def _profile_from_payload(self, item: dict[str, Any]) -> PracticeAccountProfile:

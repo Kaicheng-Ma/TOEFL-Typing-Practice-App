@@ -27,6 +27,16 @@ class AccountAndReviewTests(unittest.TestCase):
             self.assertEqual(authed.username, "Alice")
             self.assertTrue((Path(tmpdir) / "accounts" / created.slug).exists())
 
+    def test_update_password_requires_new_password_for_login(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            registry = AccountRegistry(Path(tmpdir))
+            registry.create_account("Alice")
+            registry.update_password("Alice", "secret")
+            with self.assertRaises(ValueError):
+                registry.authenticate("Alice")
+            authed = registry.authenticate("Alice", "secret")
+            self.assertEqual(authed.username, "Alice")
+
     def test_account_history_stays_isolated(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = AccountRegistry(Path(tmpdir))
@@ -69,6 +79,8 @@ class AccountAndReviewTests(unittest.TestCase):
             self.assertIsNotNone(due_item)
             self.assertEqual(due_item.word, "clarify")
             self.assertIn("due now", review_store.build_summary())
+            self.assertIn("clarify", review_store.build_due_list_summary())
+            self.assertIn("UTC", review_store.build_due_list_summary())
 
 
 if __name__ == "__main__":

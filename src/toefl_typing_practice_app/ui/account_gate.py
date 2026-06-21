@@ -11,10 +11,11 @@ from ..services.account_store import AccountRegistry
 class AccountGateFrame(ttk.Frame):
     """A simple entry screen that lets learners log in or create an account."""
 
-    def __init__(self, master: tk.Widget, registry: AccountRegistry, on_success) -> None:
+    def __init__(self, master: tk.Widget, registry: AccountRegistry, on_success, on_switch_account=None) -> None:
         super().__init__(master, padding=20)
         self.registry = registry
         self.on_success = on_success
+        self.on_switch_account = on_switch_account
         self._profiles_by_name = {}
         self._build_layout()
         self.refresh_accounts()
@@ -78,6 +79,34 @@ class AccountGateFrame(ttk.Frame):
         self.status_label = ttk.Label(form_card, text="", foreground="#8b4513", wraplength=460, justify="left")
         self.status_label.grid(row=4, column=0, columnspan=2, sticky="w", padx=8, pady=(0, 8))
 
+        manage_card = ttk.LabelFrame(self, text="Account Management")
+        manage_card.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(16, 0))
+        manage_card.columnconfigure(1, weight=1)
+
+        ttk.Label(
+            manage_card,
+            text="Password changes are optional. Leave the password blank to remove it.",
+            wraplength=860,
+            justify="left",
+            foreground="#666666",
+        ).grid(row=0, column=0, columnspan=3, sticky="w", padx=8, pady=(8, 4))
+
+        self.new_password_var = tk.StringVar()
+        ttk.Label(manage_card, text="New Password").grid(row=1, column=0, sticky="w", padx=8, pady=4)
+        self.new_password_entry = ttk.Entry(manage_card, textvariable=self.new_password_var, show="*")
+        self.new_password_entry.grid(row=1, column=1, sticky="ew", padx=8, pady=4)
+
+        self.password_note_label = ttk.Label(manage_card, text="Select an account above, then update its password.", foreground="#4d4d4d")
+        self.password_note_label.grid(row=2, column=0, columnspan=3, sticky="w", padx=8, pady=(0, 4))
+
+        manage_buttons = ttk.Frame(manage_card)
+        manage_buttons.grid(row=3, column=0, columnspan=3, sticky="ew", padx=8, pady=(0, 8))
+        manage_buttons.columnconfigure(0, weight=1)
+
+        self.update_password_button = ttk.Button(manage_buttons, text="Update Password", command=self._update_password)
+        self.update_password_button.grid(row=0, column=0, sticky="w")
+
+
     def refresh_accounts(self) -> None:
         """Reload the account list from disk."""
 
@@ -103,6 +132,9 @@ class AccountGateFrame(ttk.Frame):
             self.status_label.configure(text=f"{username} uses a password. Enter it and press Log In.")
         elif profile:
             self.status_label.configure(text=f"{username} has no password. You can log in with the username only.")
+        self.password_note_label.configure(
+            text=f"Selected account: {username}. Use the box above to set or clear its password."
+        )
 
     def _login(self) -> None:
         username = self.username_var.get().strip()
@@ -131,3 +163,17 @@ class AccountGateFrame(ttk.Frame):
             return
         self.status_label.configure(text=f"Account created for {profile.username}.")
         self.on_success(profile)
+
+    def _update_password(self) -> None:
+        username = self.username_var.get().strip()
+        if not username:
+            self.status_label.configure(text="Please choose an account first.")
+            return
+        try:
+            profile = self.registry.update_password(username, self.new_password_var.get())
+        except ValueError as exc:
+            self.status_label.configure(text=str(exc))
+            return
+        message = "Password cleared." if not profile.password_hash else "Password updated."
+        self.status_label.configure(text=f"{message} Sign in again with the selected account.")
+        self.refresh_accounts()

@@ -193,6 +193,37 @@ class VocabularyReviewStore:
             f"Next scheduled word: {upcoming.word}."
         )
 
+    def build_due_list_summary(self, limit: int = 3) -> str:
+        """Describe the most urgent items with their exact return times."""
+
+        items = self.load_items()
+        if not items:
+            return "No review items yet."
+
+        ordered = sorted(items, key=lambda item: item.urgency_score(), reverse=True)
+        due_now = [item for item in ordered if item.is_due()]
+        focus_items = due_now[:limit] if due_now else ordered[:limit]
+        lines = []
+        for item in focus_items:
+            due_time = _parse_datetime(item.due_at).astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+            if item.is_due():
+                status = f"due now, next check {due_time}"
+            else:
+                status = f"returns at {due_time}"
+            lines.append(
+                f"- {item.word} | {status} | misses {item.miss_count} | successes {item.success_count} | interval {item.interval_minutes} min"
+            )
+        return "\n".join(lines)
+
+    def next_due_time(self) -> str:
+        """Return the next scheduled due time in a readable format."""
+
+        items = self.load_items()
+        if not items:
+            return ""
+        upcoming = min(items, key=lambda item: _parse_datetime(item.due_at))
+        return _parse_datetime(upcoming.due_at).astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
     def _item_from_payload(self, item: dict[str, Any]) -> VocabularyReviewItem:
         return VocabularyReviewItem(
             word=str(item.get("word", "")),

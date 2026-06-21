@@ -139,3 +139,8 @@
 - Routed practice history, review suggestions, and statistics through account-specific contexts.
 - Added a spaced repetition review queue for vocabulary mistakes so missed words return on a memory curve instead of random reappearance.
 - Updated the dashboard and review center to show account-level summary data and queued review information.
+
+### Account Controls And Review Detail - 2026-06-21
+- Added a clearer account control area in the main window with visible switch-account and change-password actions.
+- Added password update support for the currently signed-in account, including the ability to clear a password by leaving the field blank.
+- Expanded the review center to show concrete due words plus their next return time so the queue is easier to inspect and trust.

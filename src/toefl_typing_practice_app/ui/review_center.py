@@ -85,7 +85,13 @@ class ReviewCenterFrame(ttk.Frame):
         self.summary_label.configure(text=f"Recent sessions: {len(sessions)}")
         sessions_text = self._format_sessions(sessions)
         if self.review_store is not None:
-            sessions_text = sessions_text + "\n\n" + self.review_store.build_summary()
+            sessions_text = (
+                sessions_text
+                + "\n\n"
+                + self.review_store.build_summary()
+                + "\n"
+                + self.review_store.build_due_list_summary()
+            )
         self._set_sessions_text(sessions_text)
 
     def _format_plan(self, plan: PracticeReviewPlan) -> str:

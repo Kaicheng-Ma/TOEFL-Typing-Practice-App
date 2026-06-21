@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 
 from ..config import AppConfig
 from ..models import PracticeMode
@@ -70,6 +71,28 @@ class MainWindow(ttk.Frame):
         sidebar.grid(row=1, column=0, sticky="nsw", padx=(0, 16), pady=(16, 0))
 
         ttk.Label(sidebar, text="Practice Modes", font=("Segoe UI", 11, "bold")).pack(anchor="w")
+
+        account_card = ttk.LabelFrame(sidebar, text="Current Account")
+        account_card.pack(fill="x", pady=(8, 10))
+        account_card.columnconfigure(0, weight=1)
+        ttk.Label(account_card, text=self.account_context.profile.username, font=("Segoe UI", 10, "bold")).grid(
+            row=0, column=0, sticky="w", padx=8, pady=(8, 2)
+        )
+        self.account_state_label = ttk.Label(
+            account_card,
+            text=self._password_state_text(),
+            wraplength=180,
+            justify="left",
+            foreground="#666666",
+        )
+        self.account_state_label.grid(row=1, column=0, sticky="w", padx=8, pady=(0, 8))
+        ttk.Button(account_card, text="Change Password", command=self._open_password_dialog).grid(
+            row=2, column=0, sticky="ew", padx=8, pady=(0, 6)
+        )
+        ttk.Button(account_card, text="Switch Account", command=self._switch_account).grid(
+            row=3, column=0, sticky="ew", padx=8, pady=(0, 8)
+        )
+
         ttk.Button(sidebar, text="Review Center", command=self.show_review_center).pack(fill="x", pady=(8, 6))
         ttk.Button(sidebar, text="Stats Dashboard", command=self.show_stats_dashboard).pack(fill="x", pady=(0, 6))
         if self.on_switch_account is not None:
@@ -203,6 +226,57 @@ class MainWindow(ttk.Frame):
 
         if self.on_switch_account is not None:
             self.on_switch_account()
+
+    def _password_state_text(self) -> str:
+        if self.account_context.profile.password_hash:
+            return "Password enabled. You can change or clear it from here."
+        return "No password set. Use Change Password to add one if needed."
+
+    def _open_password_dialog(self) -> None:
+        """Open a small modal dialog for changing the current account password."""
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Change Password")
+        dialog.transient(self.master)
+        dialog.grab_set()
+        dialog.resizable(False, False)
+
+        ttk.Label(
+            dialog,
+            text="Leave the field blank to remove the password.",
+            wraplength=340,
+            justify="left",
+        ).grid(row=0, column=0, columnspan=2, sticky="w", padx=12, pady=(12, 8))
+
+        ttk.Label(dialog, text="New Password").grid(row=1, column=0, sticky="w", padx=12, pady=4)
+        password_var = tk.StringVar()
+        password_entry = ttk.Entry(dialog, textvariable=password_var, show="*")
+        password_entry.grid(row=1, column=1, sticky="ew", padx=12, pady=4)
+        dialog.columnconfigure(1, weight=1)
+
+        status_label = ttk.Label(dialog, text="", foreground="#8b4513", wraplength=340, justify="left")
+        status_label.grid(row=2, column=0, columnspan=2, sticky="w", padx=12, pady=(4, 8))
+
+        def apply_change() -> None:
+            try:
+                updated_profile = self.account_context.registry.update_password(
+                    self.account_context.profile.username,
+                    password_var.get(),
+                )
+            except ValueError as exc:
+                status_label.configure(text=str(exc))
+                return
+            self.account_context.profile = updated_profile
+            self.account_label.configure(text=f"Signed in as {self.account_context.profile.username}")
+            self.account_state_label.configure(text=self._password_state_text())
+            messagebox.showinfo("Password Updated", "The account password has been updated.")
+            dialog.destroy()
+
+        button_bar = ttk.Frame(dialog)
+        button_bar.grid(row=3, column=0, columnspan=2, sticky="ew", padx=12, pady=(0, 12))
+        ttk.Button(button_bar, text="Save", command=apply_change).pack(side="left")
+        ttk.Button(button_bar, text="Cancel", command=dialog.destroy).pack(side="right")
+        password_entry.focus_set()
 
     def _bind_shortcuts(self) -> None:
         """Register global shortcuts for quick mode switching and navigation."""
