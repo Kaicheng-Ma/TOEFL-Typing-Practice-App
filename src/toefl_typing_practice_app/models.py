@@ -30,6 +30,19 @@ class EssayPrompt:
 
 
 @dataclass(slots=True)
+class VocabularyPrompt:
+    """A single vocabulary spelling question."""
+
+    prompt_id: str
+    prompt_type: str
+    topic: str
+    prompt_text: str
+    answer: str
+    meaning: str
+    example: str
+
+
+@dataclass(slots=True)
 class PracticeSessionSummary:
     """Summary for one completed practice session."""
 
@@ -40,6 +53,17 @@ class PracticeSessionSummary:
     typed_characters: int = 0
     correct_characters: int = 0
     typo_count: int = 0
+
+
+@dataclass(slots=True)
+class VocabularySessionSummary:
+    """Summary for one vocabulary spelling practice session."""
+
+    accuracy: float = 0.0
+    elapsed_seconds: int = 0
+    total_questions: int = 0
+    correct_answers: int = 0
+    wrong_answers: int = 0
 
 
 @dataclass(slots=True)
@@ -54,4 +78,3 @@ class TextComparisonResult:
     accuracy: float
     elapsed_seconds: float
     words_per_minute: float
-

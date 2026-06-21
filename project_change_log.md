@@ -50,3 +50,12 @@
 4. 重写 `ui/main_window.py`，让主界面能够在作文打字、词汇拼写和计时挑战之间切换，并默认展示作文打字模式。
 5. 扩展 `models.py`，加入作文提示和文本比对结果等核心数据结构。
 6. 使用 `python -m compileall src` 验证新增代码可正常编译，确认 Stage 2 主链路已跑通。
+### Stage 3 璇嶆眹妯″紡鍩虹灞?
+1. 鎵╁睍 `models.py` 锛屽姞鍏ユ爣鍑嗙殑璇嶆眹棰樼洰鍜屾祴璇曠粨鏋勩€?
+2. 鏂板缓 `content/vocabulary_bank.py` 锛屼负璇嶆眹鎷煎啓妯″紡鎻愪緵涓婚鍖栥€佸彲杞崲鐨勯搴撱€?
+3. 鏂板缓 `services/vocabulary_scoring.py` 锛屼负鑷姩鍒ゆ柇鍜岃緭鍏ュ綊涓€鍖栨彁渚涘熀纭€閫昏緫銆?
+
+### Stage 3 璇嶆眹妯″紡 UI 鍜屼富娴?
+1. 鏂板缓 `ui/vocabulary_practice.py` 锛屾彁渚涜瘝姹囨嫾鍐欑殑棰樺共銆佽緭鍏ャ€佸垽棰樸€佹璇弽棣堝拰涓嬩竴棰樹氦浜掋€?
+2. 閲嶅啓 `ui/main_window.py` 锛岃涓荤晫闈㈠彲浠ヤ粠浣滄枃鎵撳瓧鍒囨崲鍒拌瘝姹囨嫾鍐欐ā寮忋€?
+3. 浣跨敤 `python -m compileall src` 楠岃瘉 Stage 3 鐨勬柊澧炰唬鐮佸彲鐢ㄣ€?
