@@ -6,12 +6,15 @@ submit the input, and receive a compact result summary.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import time
 import tkinter as tk
 from tkinter import ttk
 
 from ..content.essay_generator import EssayPromptGenerator
-from ..models import EssayPrompt, TextComparisonResult
+from ..models import EssayPrompt, PracticeMode, PracticeReviewPlan, PracticeSessionRecord, TextComparisonResult
+from ..paths import get_data_dir
+from ..services.practice_history import PracticeHistoryStore
 from ..services.typing_analysis import compare_texts
 
 
@@ -21,8 +24,10 @@ class EssayPracticeFrame(ttk.Frame):
     def __init__(self, master: tk.Widget) -> None:
         super().__init__(master, padding=16)
         self.generator = EssayPromptGenerator()
+        self.history = PracticeHistoryStore(get_data_dir())
         self.current_prompt: EssayPrompt | None = None
         self.started_at: float | None = None
+        self.review_plan = PracticeReviewPlan(note="Start a practice session to build a personalized review plan.")
         self._build_layout()
         self.start_new_prompt()
 
@@ -86,14 +91,25 @@ class EssayPracticeFrame(ttk.Frame):
         )
         self.result_label.grid(row=1, column=0, sticky="w", pady=(8, 0))
 
+        self.review_label = ttk.Label(
+            stats_box,
+            text=self.review_plan.note,
+            foreground="#2f4f4f",
+            wraplength=860,
+            justify="left",
+        )
+        self.review_label.grid(row=2, column=0, sticky="w", pady=(8, 0))
+
     def start_new_prompt(self) -> None:
         """Generate a fresh prompt and reset the practice state."""
 
-        self.current_prompt = self.generator.generate()
+        self.review_plan = self.history.build_review_plan()
+        self.current_prompt = self.generator.generate(preferred_topic=self.review_plan.essay_topic)
         self.started_at = time.perf_counter()
         self._set_prompt_text(self.current_prompt.text)
         self.topic_label.configure(text=f"Topic: {self.current_prompt.title}")
         self.result_label.configure(text="A fresh prompt is ready. Start typing when you are ready.")
+        self.review_label.configure(text=self.review_plan.note)
         self.stats_label.configure(text="Accuracy: -    WPM: -    Elapsed: 0.0s")
         self.input_text.delete("1.0", tk.END)
         self.input_text.focus_set()
@@ -108,6 +124,7 @@ class EssayPracticeFrame(ttk.Frame):
         typed_text = self.input_text.get("1.0", tk.END).strip()
         result = compare_texts(self.current_prompt.text, typed_text, elapsed_seconds)
         self._render_result(result)
+        self._save_session(result, typed_text)
         return result
 
     def _render_result(self, result: TextComparisonResult) -> None:
@@ -123,6 +140,7 @@ class EssayPracticeFrame(ttk.Frame):
         )
         self.stats_label.configure(text=summary)
         self.result_label.configure(text=detail)
+        self.review_label.configure(text=self.review_plan.note)
 
     def _set_prompt_text(self, text: str) -> None:
         self.prompt_text.configure(state="normal")
@@ -149,3 +167,22 @@ class EssayPracticeFrame(ttk.Frame):
         self.submit_response()
         return "break"
 
+    def _save_session(self, result: TextComparisonResult, typed_text: str) -> None:
+        if self.current_prompt is None:
+            return
+
+        record = PracticeSessionRecord(
+            mode=PracticeMode.ESSAY_TYPING,
+            created_at=datetime.now(timezone.utc).isoformat(),
+            title=self.current_prompt.title,
+            topic=self.current_prompt.topic,
+            accuracy=result.accuracy,
+            elapsed_seconds=result.elapsed_seconds,
+            completed_items=len(typed_text.split()),
+            score=int(result.accuracy + result.words_per_minute),
+            typo_count=result.typo_count,
+            note=self.review_plan.note,
+            target_text=self.current_prompt.text,
+            typed_text=typed_text,
+        )
+        self.history.append_session(record)

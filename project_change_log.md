@@ -74,3 +74,8 @@
 1. 新建 `services/practice_history.py`，用于本地保存练习会话、最近记录和回流建议。
 2. 扩展 `models.py`，加入练习记录与复习计划的数据结构。
 3. 为作文、词汇和计时挑战生成器增加偏好输入接口，以便根据历史记录调整后续题目。
+
+### Stage 5 UI 接入
+1. 为作文、词汇和计时挑战界面接入 `PracticeHistoryStore`，让每次提交都会写入本地历史。
+2. 新建 `ui/review_center.py`，用于展示最近 session、回流建议和当前复习重点。
+3. 重写 `ui/main_window.py`，增加 Review Center 入口并让 Stage 5 的复习中心成为独立可见页面。

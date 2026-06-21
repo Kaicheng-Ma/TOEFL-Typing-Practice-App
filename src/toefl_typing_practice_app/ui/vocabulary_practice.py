@@ -6,12 +6,15 @@ score it immediately, and move on to the next word.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import time
 import tkinter as tk
 from tkinter import ttk
 
 from ..content.vocabulary_bank import VocabularyPromptGenerator
-from ..models import VocabularyPrompt
+from ..models import PracticeMode, PracticeReviewPlan, PracticeSessionRecord, VocabularyPrompt
+from ..paths import get_data_dir
+from ..services.practice_history import PracticeHistoryStore
 from ..services.vocabulary_scoring import VocabularyScoringResult, score_vocab_response
 
 
@@ -21,10 +24,12 @@ class VocabularyPracticeFrame(ttk.Frame):
     def __init__(self, master: tk.Widget) -> None:
         super().__init__(master, padding=16)
         self.generator = VocabularyPromptGenerator()
+        self.history = PracticeHistoryStore(get_data_dir())
         self.current_prompt: VocabularyPrompt | None = None
         self.session_started_at: float | None = None
         self.correct_count = 0
         self.wrong_count = 0
+        self.review_plan = PracticeReviewPlan(note="Start a vocabulary session to build a personalized review plan.")
         self._build_layout()
         self.start_new_prompt()
 
@@ -83,16 +88,30 @@ class VocabularyPracticeFrame(ttk.Frame):
         )
         self.result_label.grid(row=1, column=0, sticky="w", pady=(8, 0))
 
+        self.review_label = ttk.Label(
+            stats_box,
+            text=self.review_plan.note,
+            foreground="#2f4f4f",
+            wraplength=860,
+            justify="left",
+        )
+        self.review_label.grid(row=2, column=0, sticky="w", pady=(8, 0))
+
     def start_new_prompt(self) -> None:
         """Generate a new vocabulary prompt and reset the answer box."""
 
-        self.current_prompt = self.generator.generate()
+        self.review_plan = self.history.build_review_plan()
+        self.current_prompt = self.generator.generate(
+            preferred_topic=self.review_plan.vocab_topic,
+            preferred_prompt_type=self.review_plan.vocab_prompt_type,
+        )
         self.session_started_at = time.perf_counter()
         self._set_prompt_text(self.current_prompt.prompt_text)
         self.topic_label.configure(text=f"Topic: {self.current_prompt.topic}")
         self.answer_var.set("")
         self.answer_entry.focus_set()
         self.result_label.configure(text="A fresh vocabulary item is ready.")
+        self.review_label.configure(text=self.review_plan.note)
         self._refresh_stats()
 
     def submit_response(self) -> VocabularyScoringResult | None:
@@ -129,6 +148,8 @@ class VocabularyPracticeFrame(ttk.Frame):
             )
         )
         self.result_label.configure(text=feedback)
+        self.review_label.configure(text=self.review_plan.note)
+        self._save_session(result, elapsed_seconds)
         return result
 
     def _refresh_stats(self) -> None:
@@ -161,3 +182,22 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.submit_response()
         return "break"
 
+    def _save_session(self, result: VocabularyScoringResult, elapsed_seconds: float) -> None:
+        if self.current_prompt is None:
+            return
+
+        record = PracticeSessionRecord(
+            mode=PracticeMode.VOCABULARY_SPELLING,
+            created_at=datetime.now(timezone.utc).isoformat(),
+            title=self.current_prompt.meaning,
+            topic=self.current_prompt.topic,
+            accuracy=100.0 if result.is_correct else 0.0,
+            elapsed_seconds=elapsed_seconds,
+            completed_items=1,
+            score=10 if result.is_correct else 0,
+            prompt_type=self.current_prompt.prompt_type,
+            note=self.review_plan.note,
+            target_text=self.current_prompt.answer,
+            typed_text=result.typed_answer,
+        )
+        self.history.append_session(record)

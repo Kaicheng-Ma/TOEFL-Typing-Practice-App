@@ -7,12 +7,15 @@ completion.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import time
 import tkinter as tk
 from tkinter import ttk
 
 from ..content.timed_challenge_bank import TimedChallengePromptGenerator
-from ..models import TimedChallengePrompt
+from ..models import PracticeMode, PracticeReviewPlan, PracticeSessionRecord, TimedChallengePrompt
+from ..paths import get_data_dir
+from ..services.practice_history import PracticeHistoryStore
 from ..services.timed_challenge_scoring import TimedChallengeResult, score_timed_challenge
 
 
@@ -22,11 +25,13 @@ class TimedChallengeFrame(ttk.Frame):
     def __init__(self, master: tk.Widget) -> None:
         super().__init__(master, padding=16)
         self.generator = TimedChallengePromptGenerator()
+        self.history = PracticeHistoryStore(get_data_dir())
         self.current_prompt: TimedChallengePrompt | None = None
         self.started_at: float | None = None
         self.time_limit_seconds = 60
         self.challenge_type = tk.StringVar(value="content_sprint")
         self.time_limit_var = tk.IntVar(value=60)
+        self.review_plan = PracticeReviewPlan(note="Start a timed challenge session to build a personalized review plan.")
         self._timer_job: str | None = None
         self._build_layout()
         self.start_new_challenge()
@@ -129,11 +134,23 @@ class TimedChallengeFrame(ttk.Frame):
         )
         self.result_label.grid(row=1, column=0, sticky="w", pady=(8, 0))
 
+        self.review_label = ttk.Label(
+            stats_box,
+            text=self.review_plan.note,
+            foreground="#2f4f4f",
+            wraplength=860,
+            justify="left",
+        )
+        self.review_label.grid(row=2, column=0, sticky="w", pady=(8, 0))
+
     def start_new_challenge(self) -> None:
         """Generate a new challenge prompt and start the timer."""
 
         self._cancel_timer()
+        self.review_plan = self.history.build_review_plan()
         self.time_limit_seconds = int(self.time_limit_var.get())
+        if self.review_plan.challenge_type in {"content_sprint", "item_sprint"}:
+            self.challenge_type.set(self.review_plan.challenge_type)
         self.current_prompt = self.generator.generate(
             challenge_type=self.challenge_type.get(),
             target_count=6 if self.challenge_type.get() == "content_sprint" else 10,
@@ -143,6 +160,7 @@ class TimedChallengeFrame(ttk.Frame):
         self.input_text.delete("1.0", tk.END)
         self.input_text.focus_set()
         self.result_label.configure(text="Challenge started. Type as much as you can before time expires.")
+        self.review_label.configure(text=self.review_plan.note)
         self._schedule_timer_tick()
         self._update_live_stats()
 
@@ -161,6 +179,7 @@ class TimedChallengeFrame(ttk.Frame):
             self.time_limit_seconds,
         )
         self._render_result(result)
+        self._save_session(result, typed_text)
         self._cancel_timer()
         return result
 
@@ -236,3 +255,22 @@ class TimedChallengeFrame(ttk.Frame):
         self.submit_response()
         return "break"
 
+    def _save_session(self, result: TimedChallengeResult, typed_text: str) -> None:
+        if self.current_prompt is None:
+            return
+
+        record = PracticeSessionRecord(
+            mode=PracticeMode.TIMED_CHALLENGE,
+            created_at=datetime.now(timezone.utc).isoformat(),
+            title=self.current_prompt.title,
+            topic=self.current_prompt.challenge_type,
+            accuracy=result.accuracy,
+            elapsed_seconds=result.elapsed_seconds,
+            completed_items=result.completed_units,
+            score=result.score,
+            challenge_type=self.current_prompt.challenge_type,
+            note=self.review_plan.note,
+            target_text=self.current_prompt.text,
+            typed_text=typed_text,
+        )
+        self.history.append_session(record)

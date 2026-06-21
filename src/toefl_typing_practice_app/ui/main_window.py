@@ -12,6 +12,7 @@ from tkinter import ttk
 from ..config import AppConfig
 from ..models import PracticeMode
 from .essay_practice import EssayPracticeFrame
+from .review_center import ReviewCenterFrame
 from .vocabulary_practice import VocabularyPracticeFrame
 from .timed_challenge import TimedChallengeFrame
 
@@ -47,6 +48,8 @@ class MainWindow(ttk.Frame):
 
         ttk.Label(sidebar, text="Practice Modes", font=("Segoe UI", 11, "bold")).pack(anchor="w")
 
+        ttk.Button(sidebar, text="Review Center", command=self.show_review_center).pack(fill="x", pady=(8, 6))
+
         mode_specs = [
             (PracticeMode.ESSAY_TYPING, "Essay Typing"),
             (PracticeMode.VOCABULARY_SPELLING, "Vocabulary Spelling"),
@@ -79,6 +82,8 @@ class MainWindow(ttk.Frame):
         self.content_host.rowconfigure(0, weight=1)
 
         self._build_mode_views()
+        self.review_view = ReviewCenterFrame(self.content_host)
+        self.review_view.grid(row=0, column=0, sticky="nsew")
         self.show_mode(PracticeMode.ESSAY_TYPING)
 
         footer = ttk.Label(
@@ -125,6 +130,13 @@ class MainWindow(ttk.Frame):
         if view is not None:
             view.tkraise()
         self.stage_label.configure(text=self._stage_message(mode))
+
+    def show_review_center(self) -> None:
+        """Show the review dashboard and refresh its content."""
+
+        self.review_view.refresh()
+        self.review_view.tkraise()
+        self.stage_label.configure(text="Stage 5: review center and personalization data are now active.")
 
     @staticmethod
     def _stage_message(mode: PracticeMode) -> str:
