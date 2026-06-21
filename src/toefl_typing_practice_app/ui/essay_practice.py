@@ -1,0 +1,151 @@
+"""Essay typing practice UI.
+
+This frame provides the first real practice flow: generate a prompt, type it,
+submit the input, and receive a compact result summary.
+"""
+
+from __future__ import annotations
+
+import time
+import tkinter as tk
+from tkinter import ttk
+
+from ..content.essay_generator import EssayPromptGenerator
+from ..models import EssayPrompt, TextComparisonResult
+from ..services.typing_analysis import compare_texts
+
+
+class EssayPracticeFrame(ttk.Frame):
+    """Interactive essay typing practice panel."""
+
+    def __init__(self, master: tk.Widget) -> None:
+        super().__init__(master, padding=16)
+        self.generator = EssayPromptGenerator()
+        self.current_prompt: EssayPrompt | None = None
+        self.started_at: float | None = None
+        self._build_layout()
+        self.start_new_prompt()
+
+    def _build_layout(self) -> None:
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(2, weight=1)
+
+        header = ttk.Frame(self)
+        header.grid(row=0, column=0, sticky="ew")
+        header.columnconfigure(0, weight=1)
+
+        self.title_label = ttk.Label(header, text="Essay Typing Mode", font=("Segoe UI", 14, "bold"))
+        self.title_label.grid(row=0, column=0, sticky="w")
+
+        self.topic_label = ttk.Label(header, text="Topic: -")
+        self.topic_label.grid(row=1, column=0, sticky="w", pady=(4, 0))
+
+        controls = ttk.Frame(header)
+        controls.grid(row=0, column=1, rowspan=2, sticky="e")
+
+        self.new_button = ttk.Button(controls, text="New Prompt", command=self.start_new_prompt)
+        self.new_button.grid(row=0, column=0, padx=(0, 8))
+
+        self.submit_button = ttk.Button(controls, text="Submit", command=self.submit_response)
+        self.submit_button.grid(row=0, column=1)
+
+        prompt_box = ttk.LabelFrame(self, text="Prompt")
+        prompt_box.grid(row=1, column=0, sticky="ew", pady=(16, 12))
+        prompt_box.columnconfigure(0, weight=1)
+
+        self.prompt_text = tk.Text(prompt_box, height=7, wrap="word", relief="flat", padx=8, pady=8)
+        self.prompt_text.grid(row=0, column=0, sticky="nsew")
+        self.prompt_text.configure(state="disabled")
+
+        input_box = ttk.LabelFrame(self, text="Your Typing")
+        input_box.grid(row=2, column=0, sticky="nsew")
+        input_box.columnconfigure(0, weight=1)
+        input_box.rowconfigure(0, weight=1)
+
+        self.input_text = tk.Text(input_box, height=10, wrap="word", padx=8, pady=8)
+        self.input_text.grid(row=0, column=0, sticky="nsew")
+        self.input_text.bind("<KeyRelease>", self._update_live_stats)
+        self.input_text.bind("<Control-Return>", self._submit_from_keyboard)
+
+        stats_box = ttk.Frame(self)
+        stats_box.grid(row=3, column=0, sticky="ew", pady=(12, 0))
+        stats_box.columnconfigure(0, weight=1)
+
+        self.stats_label = ttk.Label(
+            stats_box,
+            text="Accuracy: -    WPM: -    Elapsed: -",
+        )
+        self.stats_label.grid(row=0, column=0, sticky="w")
+
+        self.result_label = ttk.Label(
+            stats_box,
+            text="Submit to see your result summary.",
+            foreground="#444444",
+            wraplength=860,
+            justify="left",
+        )
+        self.result_label.grid(row=1, column=0, sticky="w", pady=(8, 0))
+
+    def start_new_prompt(self) -> None:
+        """Generate a fresh prompt and reset the practice state."""
+
+        self.current_prompt = self.generator.generate()
+        self.started_at = time.perf_counter()
+        self._set_prompt_text(self.current_prompt.text)
+        self.topic_label.configure(text=f"Topic: {self.current_prompt.title}")
+        self.result_label.configure(text="A fresh prompt is ready. Start typing when you are ready.")
+        self.stats_label.configure(text="Accuracy: -    WPM: -    Elapsed: 0.0s")
+        self.input_text.delete("1.0", tk.END)
+        self.input_text.focus_set()
+
+    def submit_response(self) -> TextComparisonResult | None:
+        """Compare the current answer and render a compact summary."""
+
+        if not self.current_prompt or self.started_at is None:
+            return None
+
+        elapsed_seconds = time.perf_counter() - self.started_at
+        typed_text = self.input_text.get("1.0", tk.END).strip()
+        result = compare_texts(self.current_prompt.text, typed_text, elapsed_seconds)
+        self._render_result(result)
+        return result
+
+    def _render_result(self, result: TextComparisonResult) -> None:
+        summary = (
+            f"Accuracy: {result.accuracy:.2f}%    "
+            f"WPM: {result.words_per_minute:.2f}    "
+            f"Elapsed: {result.elapsed_seconds:.1f}s    "
+            f"Typos: {result.typo_count}"
+        )
+        detail = (
+            f"Correct characters: {result.correct_characters}/{result.total_characters}. "
+            f"Submit Ctrl+Enter for quick practice review, or generate a new prompt for the next round."
+        )
+        self.stats_label.configure(text=summary)
+        self.result_label.configure(text=detail)
+
+    def _set_prompt_text(self, text: str) -> None:
+        self.prompt_text.configure(state="normal")
+        self.prompt_text.delete("1.0", tk.END)
+        self.prompt_text.insert("1.0", text)
+        self.prompt_text.configure(state="disabled")
+
+    def _update_live_stats(self, _event: tk.Event | None = None) -> None:
+        if self.started_at is None or self.current_prompt is None:
+            return
+
+        elapsed_seconds = time.perf_counter() - self.started_at
+        typed_text = self.input_text.get("1.0", tk.END).strip()
+        result = compare_texts(self.current_prompt.text, typed_text, elapsed_seconds)
+        self.stats_label.configure(
+            text=(
+                f"Accuracy: {result.accuracy:.2f}%    "
+                f"WPM: {result.words_per_minute:.2f}    "
+                f"Elapsed: {result.elapsed_seconds:.1f}s"
+            )
+        )
+
+    def _submit_from_keyboard(self, event: tk.Event) -> str:
+        self.submit_response()
+        return "break"
+
