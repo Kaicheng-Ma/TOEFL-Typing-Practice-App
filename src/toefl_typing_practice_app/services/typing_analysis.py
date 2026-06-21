@@ -20,6 +20,7 @@ def compare_texts(target_text: str, typed_text: str, elapsed_seconds: float) -> 
 
     normalized_target = normalize_text(target_text)
     normalized_typed = normalize_text(typed_text)
+    elapsed_seconds = max(elapsed_seconds, 0.0)
     total_characters = max(len(normalized_target), 1)
 
     correct_characters = sum(
@@ -42,4 +43,3 @@ def compare_texts(target_text: str, typed_text: str, elapsed_seconds: float) -> 
         elapsed_seconds=round(elapsed_seconds, 2),
         words_per_minute=words_per_minute,
     )
-

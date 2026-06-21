@@ -68,6 +68,7 @@ class TimedChallengePromptGenerator:
         """Generate a timed challenge prompt with a specific item count."""
 
         bank = next((entry for entry in CHALLENGE_BANK if entry.challenge_type == challenge_type), CHALLENGE_BANK[0])
+        target_count = max(target_count, 1)
         if challenge_type == "item_sprint":
             units = self._rng.sample(bank.units, k=min(target_count, len(bank.units)))
             prompt_text = "Type these items one by one:\n" + "\n".join(f"{index + 1}. {unit}" for index, unit in enumerate(units))

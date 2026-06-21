@@ -37,6 +37,8 @@ def score_timed_challenge(
 ) -> TimedChallengeResult:
     """Score a timed challenge session using a simple speed-accuracy balance."""
 
+    elapsed_seconds = max(elapsed_seconds, 0.0)
+    time_limit_seconds = max(time_limit_seconds, 0)
     comparison = compare_texts(prompt.text, typed_text, elapsed_seconds)
     units = _split_units(typed_text)
     completed_units = len(units)
@@ -50,4 +52,3 @@ def score_timed_challenge(
         accuracy=comparison.accuracy,
         score=score,
     )
-

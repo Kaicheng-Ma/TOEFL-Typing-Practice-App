@@ -58,11 +58,18 @@ class PracticeHistoryStore:
             temp_path.write_text(payload, encoding="utf-8")
             temp_path.replace(self.file_path)
         except OSError as exc:
+            if temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except OSError:
+                    pass
             raise RuntimeError("Unable to save practice history locally.") from exc
 
     def recent_sessions(self, limit: int = 12) -> list[PracticeSessionRecord]:
         """Return the most recent sessions."""
 
+        if limit <= 0:
+            return []
         sessions = self.load_sessions()
         return sessions[-limit:]
 

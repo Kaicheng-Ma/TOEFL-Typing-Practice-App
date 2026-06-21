@@ -110,3 +110,10 @@
 2. Made history saving fail loudly with a friendly RuntimeError while the practice pages downgrade save failures to non-blocking notes.
 3. Added unittest coverage for history storage, generators, scoring, and statistics to protect the app's core flows.
 4. Added a startup guard so missing desktop display support raises a clearer RuntimeError.
+
+### Testing and Boundary Hardening - 2026-06-21
+- Added boundary-focused tests for invalid JSON payloads, non-list history data, nonpositive recent-session limits, negative elapsed time, and invalid generator preferences.
+- Hardened history saving cleanup so temporary files are removed if persistence fails.
+- Clamped negative elapsed time and negative timed-challenge inputs to safer defaults.
+- Clamped nonpositive timed-challenge target counts to at least one item.
+- Verified the full test suite and compile check after the hardening pass.
