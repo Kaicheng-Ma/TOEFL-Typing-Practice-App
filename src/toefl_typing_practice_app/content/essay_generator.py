@@ -65,10 +65,13 @@ class EssayPromptGenerator:
     def __init__(self, seed: int | None = None) -> None:
         self._rng = Random(seed)
 
-    def generate(self) -> EssayPrompt:
+    def generate(self, preferred_topic: str = "") -> EssayPrompt:
         """Generate a new prompt with a changing theme and sentence mix."""
 
-        theme = self._rng.choice(THEMES)
+        theme_pool = [theme for theme in THEMES if not preferred_topic or theme.name == preferred_topic]
+        if not theme_pool:
+            theme_pool = list(THEMES)
+        theme = self._rng.choice(theme_pool)
         sentence_count = self._rng.randint(3, 5)
         sampled_sentences = self._rng.sample(theme.sentences, k=sentence_count)
         prompt_text = " ".join(sampled_sentences)
@@ -78,4 +81,3 @@ class EssayPromptGenerator:
             topic=theme.name,
             text=prompt_text,
         )
-

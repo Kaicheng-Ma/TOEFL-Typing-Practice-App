@@ -81,4 +81,3 @@ class TimedChallengePromptGenerator:
             text=prompt_text,
             target_count=len(units),
         )
-

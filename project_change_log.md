@@ -69,3 +69,8 @@
 1. 新建 `ui/timed_challenge.py`，提供计时挑战的时间限制、题目切换、实时统计和提交结果界面。
 2. 重写 `ui/main_window.py`，让主窗口把 Timed Challenge 入口切换到真实可用的计时挑战面板。
 3. 使用 `python -m compileall src` 验证新增计时挑战界面可正常编译。
+
+### Stage 5 后端基础层
+1. 新建 `services/practice_history.py`，用于本地保存练习会话、最近记录和回流建议。
+2. 扩展 `models.py`，加入练习记录与复习计划的数据结构。
+3. 为作文、词汇和计时挑战生成器增加偏好输入接口，以便根据历史记录调整后续题目。

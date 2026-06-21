@@ -1,8 +1,8 @@
 """Shared domain models.
 
-The first implementation stage only needs a small set of typed objects, but
-they should already reflect the app's core concepts so later stages can build
-on them without reshaping the whole project.
+The app grows stage by stage, but the underlying objects should already map to
+the same core concepts across writing practice, vocabulary drills, timed
+challenge sessions, and review history.
 """
 
 from __future__ import annotations
@@ -51,7 +51,6 @@ class TimedChallengePrompt:
     title: str
     text: str
     target_count: int
-
 
 
 @dataclass(slots=True)
@@ -103,3 +102,35 @@ class TextComparisonResult:
     accuracy: float
     elapsed_seconds: float
     words_per_minute: float
+
+
+@dataclass(slots=True)
+class PracticeSessionRecord:
+    """Persisted session record used for review and personalization."""
+
+    mode: PracticeMode
+    created_at: str
+    title: str
+    topic: str
+    accuracy: float
+    elapsed_seconds: float
+    completed_items: int
+    score: int
+    challenge_type: str = ""
+    prompt_type: str = ""
+    typo_count: int = 0
+    note: str = ""
+    target_text: str = ""
+    typed_text: str = ""
+
+
+@dataclass(slots=True)
+class PracticeReviewPlan:
+    """Small recommendation bundle derived from recent history."""
+
+    note: str
+    essay_topic: str = ""
+    vocab_topic: str = ""
+    vocab_prompt_type: str = ""
+    challenge_type: str = ""
+
