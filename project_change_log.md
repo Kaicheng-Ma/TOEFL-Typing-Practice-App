@@ -28,3 +28,10 @@
 1. 新建并完善仓库对外 README。
 2. 在 README 中说明项目定位、核心模式、内容来源和当前状态。
 3. 在 README 中保留本地制作指导文件的引用，方便后续按同一套规则推进实现。
+
+### Stage 1 骨架落地
+
+1. 新建 `pyproject.toml` 作为 Python 项目入口配置。
+2. 新建 `src/toefl_typing_practice_app/` 包结构。
+3. 新建应用配置、数据模型、路径工具、主窗口与启动入口。
+4. 使用 `python -m compileall src` 进行了基础语法验证，确认模块可被正常编译。

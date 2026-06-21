@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toefl-typing-practice-app"
+version = "0.1.0"
+description = "A TOEFL typing practice app with dynamic writing and vocabulary drills."
+readme = "README.md"
+requires-python = ">=3.11"
+
+[project.scripts]
+toefl-typing-practice = "toefl_typing_practice_app.__main__:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
