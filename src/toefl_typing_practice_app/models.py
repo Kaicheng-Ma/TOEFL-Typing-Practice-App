@@ -134,3 +134,15 @@ class PracticeReviewPlan:
     vocab_topic: str = ""
     vocab_prompt_type: str = ""
     challenge_type: str = ""
+
+
+@dataclass(slots=True)
+class PracticeAccountProfile:
+    """Stored account identity used to separate one learner's data from another."""
+
+    username: str
+    slug: str
+    password_salt: str = ""
+    password_hash: str = ""
+    created_at: str = ""
+    last_login_at: str = ""

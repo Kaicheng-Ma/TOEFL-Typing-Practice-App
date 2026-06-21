@@ -12,11 +12,11 @@ SRC_DIR = Path(__file__).resolve().parents[1] / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from toefl_typing_practice_app.app import create_app
+from toefl_typing_practice_app.app import TypingPracticeApp, create_app
 from toefl_typing_practice_app.content.essay_generator import EssayPromptGenerator
 from toefl_typing_practice_app.content.timed_challenge_bank import TimedChallengePromptGenerator
 from toefl_typing_practice_app.content.vocabulary_bank import VOCABULARY_ITEMS, VocabularyPromptGenerator
-from toefl_typing_practice_app.models import PracticeMode, PracticeSessionRecord, TimedChallengePrompt
+from toefl_typing_practice_app.models import PracticeAccountProfile, PracticeMode, PracticeSessionRecord, TimedChallengePrompt
 from toefl_typing_practice_app.services.practice_history import PracticeHistoryStore
 from toefl_typing_practice_app.services.timed_challenge_scoring import score_timed_challenge
 from toefl_typing_practice_app.services.typing_analysis import compare_texts
@@ -100,10 +100,18 @@ class BoundaryCaseTests(unittest.TestCase):
 
     def test_create_app_destroys_root_when_main_window_initialization_fails(self) -> None:
         fake_root = mock.Mock()
+        fake_gate = mock.Mock()
         with mock.patch("toefl_typing_practice_app.app.tk.Tk", return_value=fake_root):
-            with mock.patch("toefl_typing_practice_app.app.MainWindow", side_effect=Exception("boom")):
-                with self.assertRaises(Exception):
-                    create_app()
+            with mock.patch("toefl_typing_practice_app.app.AccountGateFrame", return_value=fake_gate):
+                app = TypingPracticeApp()
+        with mock.patch("toefl_typing_practice_app.app.MainWindow", side_effect=Exception("boom")):
+            with self.assertRaises(Exception):
+                app._activate_account(
+                    PracticeAccountProfile(
+                        username="Tester",
+                        slug="tester",
+                    )
+                )
         fake_root.destroy.assert_called_once()
 
     def test_vocabulary_enter_action_switches_from_submit_to_next(self) -> None:

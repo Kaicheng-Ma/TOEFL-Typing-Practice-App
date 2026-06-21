@@ -132,3 +132,10 @@
 - Changed vocabulary spelling input so the first Enter submits the answer and the second Enter advances to the next prompt.
 - Added an explicit waiting state to prevent repeated Enter presses from re-submitting the same question and inflating accuracy.
 - Added a regression test for the Enter state transition.
+
+### Account Memory And Spaced Review - 2026-06-21
+- Added account registry support with optional passwords and separate per-account storage folders.
+- Added a login/create-account gate so each user enters through their own account instead of a shared global session.
+- Routed practice history, review suggestions, and statistics through account-specific contexts.
+- Added a spaced repetition review queue for vocabulary mistakes so missed words return on a memory curve instead of random reappearance.
+- Updated the dashboard and review center to show account-level summary data and queued review information.

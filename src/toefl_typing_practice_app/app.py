@@ -6,11 +6,13 @@ import tkinter as tk
 
 from .config import AppConfig
 from .paths import get_data_dir
+from .services.account_store import AccountRegistry, AccountSessionContext, PracticeAccountProfile
+from .ui.account_gate import AccountGateFrame
 from .ui.main_window import MainWindow
 
 
 class TypingPracticeApp:
-    """Owns the Tk root window and wires the main screen together."""
+    """Owns the Tk root window and wires the login and practice screens."""
 
     def __init__(self, config: AppConfig | None = None) -> None:
         self.config = config or AppConfig()
@@ -24,12 +26,50 @@ class TypingPracticeApp:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
 
-        # The data directory is created early so future stages can persist content
-        # without having to duplicate path bootstrap logic.
         self.data_dir = get_data_dir()
+        self.account_registry = AccountRegistry(self.data_dir)
+        self.active_account_context: AccountSessionContext | None = None
+        self.current_view: tk.Widget | None = None
+        self._show_account_gate()
+
+    def _clear_current_view(self) -> None:
+        if self.current_view is not None:
+            self.current_view.destroy()
+            self.current_view = None
+
+    def _show_account_gate(self) -> None:
+        """Show the login/create-account screen."""
+
+        self._clear_current_view()
+        self.active_account_context = None
+        self.root.title(f"{self.config.app_name} - Login")
+        gate = AccountGateFrame(self.root, self.account_registry, on_success=self._activate_account)
+        gate.grid(row=0, column=0, sticky="nsew")
+        self.current_view = gate
+
+    def _activate_account(self, profile: PracticeAccountProfile) -> None:
+        """Load the selected account and switch into the main practice shell."""
+
+        self.active_account_context = self.account_registry.build_context(profile)
+        self._show_main_window()
+
+    def _show_main_window(self) -> None:
+        """Build the practice UI for the active account."""
+
+        if self.active_account_context is None:
+            return
+
+        self._clear_current_view()
+        self.root.title(f"{self.config.app_name} - {self.active_account_context.profile.username}")
         try:
-            self.main_window = MainWindow(self.root, self.config)
-            self.main_window.grid(row=0, column=0, sticky="nsew")
+            window = MainWindow(
+                self.root,
+                self.config,
+                self.active_account_context,
+                on_switch_account=self._show_account_gate,
+            )
+            window.grid(row=0, column=0, sticky="nsew")
+            self.current_view = window
         except Exception:
             self.root.destroy()
             raise

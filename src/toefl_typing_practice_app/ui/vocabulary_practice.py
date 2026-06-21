@@ -16,21 +16,29 @@ from ..models import PracticeMode, PracticeReviewPlan, PracticeSessionRecord, Vo
 from ..paths import get_data_dir
 from ..services.practice_history import PracticeHistoryStore
 from ..services.vocabulary_scoring import VocabularyScoringResult, score_vocab_response
+from ..services.vocabulary_review import VocabularyReviewItem, VocabularyReviewStore
 
 
 class VocabularyPracticeFrame(ttk.Frame):
     """Interactive vocabulary spelling panel."""
 
-    def __init__(self, master: tk.Widget) -> None:
+    def __init__(
+        self,
+        master: tk.Widget,
+        history_store: PracticeHistoryStore | None = None,
+        review_store: VocabularyReviewStore | None = None,
+    ) -> None:
         super().__init__(master, padding=16)
         self.generator = VocabularyPromptGenerator()
-        self.history = PracticeHistoryStore(get_data_dir())
+        self.history = history_store or PracticeHistoryStore(get_data_dir())
+        self.review_store = review_store or VocabularyReviewStore(self.history.account_dir)
         self.current_prompt: VocabularyPrompt | None = None
         self.session_started_at: float | None = None
         self.awaiting_next_prompt = False
         self.correct_count = 0
         self.wrong_count = 0
         self.review_plan = PracticeReviewPlan(note="Start a vocabulary session to build a personalized review plan.")
+        self.current_review_item: VocabularyReviewItem | None = None
         self._build_layout()
         self.start_new_prompt()
 
@@ -131,21 +139,35 @@ class VocabularyPracticeFrame(ttk.Frame):
         """Generate a new vocabulary prompt and reset the answer box."""
 
         self.review_plan = self.history.build_review_plan()
-        self.current_prompt = self.generator.generate(
-            preferred_topic=self.review_plan.vocab_topic,
-            preferred_prompt_type=self.review_plan.vocab_prompt_type,
-        )
+        review_item = self.review_store.next_due_item()
+        self.current_review_item = review_item
+        if review_item is not None:
+            self.current_prompt = self.generator.generate(
+                preferred_topic=review_item.topic,
+                preferred_prompt_type=review_item.recommended_prompt_type(),
+                preferred_word=review_item.word,
+            )
+            self.prompt_type_label_text = "Prompt type: Review return"
+        else:
+            self.current_prompt = self.generator.generate(
+                preferred_topic=self.review_plan.vocab_topic,
+                preferred_prompt_type=self.review_plan.vocab_prompt_type,
+            )
+            self.prompt_type_label_text = f"Prompt type: {self.current_prompt.prompt_type.replace('_', ' ').title()}"
         self.session_started_at = time.perf_counter()
         self.awaiting_next_prompt = False
         self._set_prompt_text(self.current_prompt.prompt_text)
         self.topic_label.configure(text=f"Topic: {self.current_prompt.topic}")
-        self.prompt_type_label.configure(text=f"Prompt type: {self.current_prompt.prompt_type.replace('_', ' ').title()}")
+        self.prompt_type_label.configure(text=self.prompt_type_label_text)
         self.answer_var.set("")
         self.answer_entry.focus_set()
         self.hint_label.configure(text=f"Hint: starts with '{self.current_prompt.prefix_hint}'")
-        self.result_label.configure(text="A fresh vocabulary item is ready.")
+        if review_item is not None:
+            self.result_label.configure(text=f"Review return: {review_item.word} is due again.")
+        else:
+            self.result_label.configure(text="A fresh vocabulary item is ready.")
         self.example_label.configure(text="Example sentence: " + self.current_prompt.example)
-        self.review_label.configure(text=self.review_plan.note)
+        self.review_label.configure(text=self.review_store.build_summary())
         self.submit_button.configure(text="Check Answer")
         self._refresh_stats()
 
@@ -183,13 +205,14 @@ class VocabularyPracticeFrame(ttk.Frame):
             )
         )
         self.result_label.configure(text=feedback)
-        self.review_label.configure(text=self.review_plan.note)
+        self.review_label.configure(text=self.review_store.build_summary())
         self.prompt_type_label.configure(text=f"Prompt type: {self.current_prompt.prompt_type.replace('_', ' ').title()}")
         self.hint_label.configure(text=f"Hint: starts with '{self.current_prompt.prefix_hint}'")
         self.example_label.configure(text="Example sentence: " + self.current_prompt.example)
         self.awaiting_next_prompt = True
         self.submit_button.configure(text="Next Prompt")
         self._save_session(result, elapsed_seconds)
+        self._save_review_attempt(result, elapsed_seconds)
         return result
 
     def _refresh_stats(self) -> None:
@@ -254,3 +277,13 @@ class VocabularyPracticeFrame(ttk.Frame):
             # Saving should not interrupt the user's session, so we downgrade
             # persistence problems to a visible note on the page.
             self.review_label.configure(text="Practice history could not be saved, but your answer was still checked.")
+
+    def _save_review_attempt(self, result: VocabularyScoringResult, elapsed_seconds: float) -> None:
+        """Update the spaced repetition queue after each vocabulary response."""
+
+        if self.current_prompt is None:
+            return
+        try:
+            self.review_store.record_attempt(self.current_prompt, result.is_correct, elapsed_seconds)
+        except RuntimeError:
+            self.review_label.configure(text="Vocabulary review queue could not be saved, but your answer was still checked.")

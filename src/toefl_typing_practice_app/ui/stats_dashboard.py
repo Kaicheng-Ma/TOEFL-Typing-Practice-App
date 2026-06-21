@@ -17,10 +17,17 @@ from ..services.practice_statistics import build_practice_statistics
 class StatsDashboardFrame(ttk.Frame):
     """Display overall performance and recent trends."""
 
-    def __init__(self, master: tk.Widget, on_resume=None) -> None:
+    def __init__(
+        self,
+        master: tk.Widget,
+        on_resume=None,
+        history_store: PracticeHistoryStore | None = None,
+        account_name: str = "",
+    ) -> None:
         super().__init__(master, padding=16)
-        self.history = PracticeHistoryStore(get_data_dir())
+        self.history = history_store or PracticeHistoryStore(get_data_dir())
         self.on_resume = on_resume
+        self.account_name = account_name
         self._build_layout()
         self.refresh()
 
@@ -28,7 +35,12 @@ class StatsDashboardFrame(ttk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(3, weight=1)
 
-        ttk.Label(self, text="Stats Dashboard", font=("Segoe UI", 14, "bold")).grid(row=0, column=0, sticky="w")
+        header = ttk.Frame(self)
+        header.grid(row=0, column=0, sticky="ew")
+        header.columnconfigure(0, weight=1)
+        ttk.Label(header, text="Stats Dashboard", font=("Segoe UI", 14, "bold")).grid(row=0, column=0, sticky="w")
+        self.account_label = ttk.Label(header, text="", foreground="#4d4d4d")
+        self.account_label.grid(row=0, column=1, sticky="e")
         self.summary_card = ttk.LabelFrame(self, text="Overview")
         self.summary_card.grid(row=1, column=0, sticky="ew", pady=(8, 12))
         self.summary_card.columnconfigure(0, weight=1)
@@ -67,6 +79,7 @@ class StatsDashboardFrame(ttk.Frame):
 
         sessions = self.history.recent_sessions(100)
         stats = build_practice_statistics(sessions)
+        self.account_label.configure(text=f"Account: {self.account_name or 'Unknown'}")
         self.summary_label.configure(
             text=(
                 f"Total sessions: {stats.total_sessions}    "

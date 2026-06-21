@@ -1,7 +1,7 @@
 """Main application window.
 
-The shell keeps the stage-based navigation visible while the essay practice
-panel provides the first real interactive workflow.
+The shell keeps the stage-based navigation visible while the practice panels
+provide the interactive workflow for the currently signed-in account.
 """
 
 from __future__ import annotations
@@ -11,20 +11,29 @@ from tkinter import ttk
 
 from ..config import AppConfig
 from ..models import PracticeMode
+from ..services.account_store import AccountSessionContext
 from .essay_practice import EssayPracticeFrame
 from .review_center import ReviewCenterFrame
 from .stats_dashboard import StatsDashboardFrame
-from .vocabulary_practice import VocabularyPracticeFrame
 from .timed_challenge import TimedChallengeFrame
+from .vocabulary_practice import VocabularyPracticeFrame
 
 
 class MainWindow(ttk.Frame):
     """Primary window frame that hosts the mode navigation and content area."""
 
-    def __init__(self, master: tk.Tk, config: AppConfig) -> None:
+    def __init__(
+        self,
+        master: tk.Tk,
+        config: AppConfig,
+        account_context: AccountSessionContext,
+        on_switch_account=None,
+    ) -> None:
         super().__init__(master, padding=18)
         self.master = master
         self.config = config
+        self.account_context = account_context
+        self.on_switch_account = on_switch_account
         self.mode_views: dict[PracticeMode, ttk.Frame] = {}
         self.current_practice_mode = PracticeMode.ESSAY_TYPING
         self._build_layout()
@@ -36,23 +45,35 @@ class MainWindow(ttk.Frame):
 
         header = ttk.Frame(self)
         header.grid(row=0, column=0, columnspan=2, sticky="ew")
+        header.columnconfigure(0, weight=1)
+        header.columnconfigure(1, weight=0)
 
-        title = ttk.Label(header, text=self.config.app_name, font=("Segoe UI", 20, "bold"))
+        title_block = ttk.Frame(header)
+        title_block.grid(row=0, column=0, sticky="w")
+        title = ttk.Label(title_block, text=self.config.app_name, font=("Segoe UI", 20, "bold"))
         title.pack(anchor="w")
 
         subtitle = ttk.Label(
-            header,
+            title_block,
             text="Dynamic TOEFL typing drills for essays, vocabulary, and timed challenges.",
         )
         subtitle.pack(anchor="w", pady=(4, 0))
+
+        self.account_label = ttk.Label(
+            header,
+            text=f"Signed in as {self.account_context.profile.username}",
+            foreground="#4d4d4d",
+        )
+        self.account_label.grid(row=0, column=1, sticky="e")
 
         sidebar = ttk.Frame(self)
         sidebar.grid(row=1, column=0, sticky="nsw", padx=(0, 16), pady=(16, 0))
 
         ttk.Label(sidebar, text="Practice Modes", font=("Segoe UI", 11, "bold")).pack(anchor="w")
-
         ttk.Button(sidebar, text="Review Center", command=self.show_review_center).pack(fill="x", pady=(8, 6))
         ttk.Button(sidebar, text="Stats Dashboard", command=self.show_stats_dashboard).pack(fill="x", pady=(0, 6))
+        if self.on_switch_account is not None:
+            ttk.Button(sidebar, text="Switch Account", command=self._switch_account).pack(fill="x", pady=(0, 6))
 
         mode_specs = [
             (PracticeMode.ESSAY_TYPING, "Essay Typing"),
@@ -68,9 +89,7 @@ class MainWindow(ttk.Frame):
         content.columnconfigure(0, weight=1)
         content.rowconfigure(4, weight=1)
 
-        ttk.Label(content, text="Current Stage", font=("Segoe UI", 11, "bold")).grid(
-            row=0, column=0, sticky="w"
-        )
+        ttk.Label(content, text="Current Stage", font=("Segoe UI", 11, "bold")).grid(row=0, column=0, sticky="w")
 
         self.stage_label = ttk.Label(
             content,
@@ -80,8 +99,6 @@ class MainWindow(ttk.Frame):
         )
         self.stage_label.grid(row=1, column=0, sticky="nw", pady=(8, 12))
 
-        # A compact context line helps the user understand what action the
-        # current panel expects without reading the whole page.
         self.context_label = ttk.Label(
             content,
             text="Choose a practice mode to start a focused session.",
@@ -91,7 +108,6 @@ class MainWindow(ttk.Frame):
         )
         self.context_label.grid(row=2, column=0, sticky="nw", pady=(0, 12))
 
-        # Short hint text reduces the need to discover shortcuts by trial and error.
         self.shortcut_label = ttk.Label(
             content,
             text="Shortcuts: Ctrl+1/2/3 switch modes, Ctrl+4 review, Ctrl+5 stats, Esc return to practice.",
@@ -107,9 +123,19 @@ class MainWindow(ttk.Frame):
         self.content_host.rowconfigure(0, weight=1)
 
         self._build_mode_views()
-        self.review_view = ReviewCenterFrame(self.content_host, on_resume=self.resume_practice)
+        self.review_view = ReviewCenterFrame(
+            self.content_host,
+            on_resume=self.resume_practice,
+            history_store=self.account_context.history_store,
+            review_store=self.account_context.review_store,
+        )
         self.review_view.grid(row=0, column=0, sticky="nsew")
-        self.stats_view = StatsDashboardFrame(self.content_host, on_resume=self.resume_practice)
+        self.stats_view = StatsDashboardFrame(
+            self.content_host,
+            on_resume=self.resume_practice,
+            history_store=self.account_context.history_store,
+            account_name=self.account_context.profile.username,
+        )
         self.stats_view.grid(row=0, column=0, sticky="nsew")
         self.show_mode(PracticeMode.ESSAY_TYPING)
 
@@ -125,30 +151,21 @@ class MainWindow(ttk.Frame):
     def _build_mode_views(self) -> None:
         """Create one frame per mode so the shell can swap views cleanly."""
 
-        essay_view = EssayPracticeFrame(self.content_host)
+        essay_view = EssayPracticeFrame(self.content_host, history_store=self.account_context.history_store)
         essay_view.grid(row=0, column=0, sticky="nsew")
         self.mode_views[PracticeMode.ESSAY_TYPING] = essay_view
 
-        vocabulary_view = VocabularyPracticeFrame(self.content_host)
+        vocabulary_view = VocabularyPracticeFrame(
+            self.content_host,
+            history_store=self.account_context.history_store,
+            review_store=self.account_context.review_store,
+        )
         vocabulary_view.grid(row=0, column=0, sticky="nsew")
         self.mode_views[PracticeMode.VOCABULARY_SPELLING] = vocabulary_view
 
-        timed_view = TimedChallengeFrame(self.content_host)
+        timed_view = TimedChallengeFrame(self.content_host, history_store=self.account_context.history_store)
         timed_view.grid(row=0, column=0, sticky="nsew")
         self.mode_views[PracticeMode.TIMED_CHALLENGE] = timed_view
-
-    def _build_placeholder_view(self, mode: PracticeMode) -> ttk.Frame:
-        """Return a temporary placeholder panel for modes not yet implemented."""
-
-        frame = ttk.Frame(self.content_host, padding=12)
-        ttk.Label(frame, text=self._mode_label(mode), font=("Segoe UI", 12, "bold")).pack(anchor="w")
-        ttk.Label(
-            frame,
-            text="This mode will be implemented in a later stage. The current stage keeps the navigation ready.",
-            wraplength=560,
-            justify="left",
-        ).pack(anchor="w", pady=(8, 0))
-        return frame
 
     def show_mode(self, mode: PracticeMode) -> None:
         """Raise the selected mode frame to the top of the content host."""
@@ -166,7 +183,7 @@ class MainWindow(ttk.Frame):
         self.review_view.refresh()
         self.review_view.tkraise()
         self.stage_label.configure(text="Stage 5: review center and personalization data are now active.")
-        self.context_label.configure(text="Review the latest sessions and see which topics the app will prioritize next.")
+        self.context_label.configure(text="Review the latest sessions, spaced review queue, and next focus items.")
 
     def show_stats_dashboard(self) -> None:
         """Show the statistics dashboard and refresh its content."""
@@ -174,12 +191,18 @@ class MainWindow(ttk.Frame):
         self.stats_view.refresh()
         self.stats_view.tkraise()
         self.stage_label.configure(text="Stage 6: statistics and UX polish are now active.")
-        self.context_label.configure(text="Inspect overall accuracy, mode balance, and recent trend data.")
+        self.context_label.configure(text="Inspect overall accuracy, mode balance, and account-level summary data.")
 
     def resume_practice(self) -> None:
         """Return to the most recently selected practice mode."""
 
         self.show_mode(self.current_practice_mode)
+
+    def _switch_account(self) -> None:
+        """Return to the account gate so another learner can sign in."""
+
+        if self.on_switch_account is not None:
+            self.on_switch_account()
 
     def _bind_shortcuts(self) -> None:
         """Register global shortcuts for quick mode switching and navigation."""
@@ -194,6 +217,16 @@ class MainWindow(ttk.Frame):
         self.master.bind_all("<Control-4>", lambda _event: self.show_review_center())
         self.master.bind_all("<Control-5>", lambda _event: self.show_stats_dashboard())
         self.master.bind_all("<Escape>", lambda _event: self.resume_practice())
+
+    def destroy(self) -> None:
+        """Unbind global shortcuts before the frame is torn down."""
+
+        for sequence in ("<Control-1>", "<Control-2>", "<Control-3>", "<Control-4>", "<Control-5>", "<Escape>"):
+            try:
+                self.master.unbind_all(sequence)
+            except tk.TclError:
+                pass
+        super().destroy()
 
     def _switch_mode_from_shortcut(self, mode: PracticeMode) -> str:
         """Switch modes from a keyboard shortcut and stop event bubbling."""
@@ -218,12 +251,3 @@ class MainWindow(ttk.Frame):
         if mode == PracticeMode.VOCABULARY_SPELLING:
             return "Vocabulary mode focuses on single-word recall and accurate spelling under light pressure."
         return "Timed challenge mode focuses on speed, completion, and accuracy balance within a fixed window."
-
-    @staticmethod
-    def _mode_label(mode: PracticeMode) -> str:
-        labels = {
-            PracticeMode.ESSAY_TYPING: "Essay Typing",
-            PracticeMode.VOCABULARY_SPELLING: "Vocabulary Spelling",
-            PracticeMode.TIMED_CHALLENGE: "Timed Challenge",
-        }
-        return labels[mode]

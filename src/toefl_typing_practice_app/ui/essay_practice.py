@@ -21,10 +21,10 @@ from ..services.typing_analysis import compare_texts
 class EssayPracticeFrame(ttk.Frame):
     """Interactive essay typing practice panel."""
 
-    def __init__(self, master: tk.Widget) -> None:
+    def __init__(self, master: tk.Widget, history_store: PracticeHistoryStore | None = None) -> None:
         super().__init__(master, padding=16)
         self.generator = EssayPromptGenerator()
-        self.history = PracticeHistoryStore(get_data_dir())
+        self.history = history_store or PracticeHistoryStore(get_data_dir())
         self.current_prompt: EssayPrompt | None = None
         self.started_at: float | None = None
         self.review_plan = PracticeReviewPlan(note="Start a practice session to build a personalized review plan.")

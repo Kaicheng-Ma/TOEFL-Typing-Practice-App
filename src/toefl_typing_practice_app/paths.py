@@ -22,3 +22,19 @@ def get_data_dir() -> Path:
     data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir
 
+
+def get_accounts_root(data_dir: Path | None = None) -> Path:
+    """Return the root directory that stores all account-specific data."""
+
+    root_dir = data_dir or get_data_dir()
+    accounts_root = root_dir / "accounts"
+    accounts_root.mkdir(parents=True, exist_ok=True)
+    return accounts_root
+
+
+def get_account_dir(account_slug: str, data_dir: Path | None = None) -> Path:
+    """Return the storage directory for one account."""
+
+    account_dir = get_accounts_root(data_dir) / account_slug
+    account_dir.mkdir(parents=True, exist_ok=True)
+    return account_dir

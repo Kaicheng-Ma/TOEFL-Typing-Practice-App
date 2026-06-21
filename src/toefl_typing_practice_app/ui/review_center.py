@@ -12,14 +12,22 @@ from tkinter import ttk
 from ..models import PracticeReviewPlan
 from ..paths import get_data_dir
 from ..services.practice_history import PracticeHistoryStore
+from ..services.vocabulary_review import VocabularyReviewStore
 
 
 class ReviewCenterFrame(ttk.Frame):
     """A lightweight dashboard for review and personalization."""
 
-    def __init__(self, master: tk.Widget, on_resume=None) -> None:
+    def __init__(
+        self,
+        master: tk.Widget,
+        on_resume=None,
+        history_store: PracticeHistoryStore | None = None,
+        review_store: VocabularyReviewStore | None = None,
+    ) -> None:
         super().__init__(master, padding=16)
-        self.history = PracticeHistoryStore(get_data_dir())
+        self.history = history_store or PracticeHistoryStore(get_data_dir())
+        self.review_store = review_store
         self.on_resume = on_resume
         self._build_layout()
         self.refresh()
@@ -75,7 +83,10 @@ class ReviewCenterFrame(ttk.Frame):
         sessions = self.history.recent_sessions(8)
         self.plan_label.configure(text=self._format_plan(plan))
         self.summary_label.configure(text=f"Recent sessions: {len(sessions)}")
-        self._set_sessions_text(self._format_sessions(sessions))
+        sessions_text = self._format_sessions(sessions)
+        if self.review_store is not None:
+            sessions_text = sessions_text + "\n\n" + self.review_store.build_summary()
+        self._set_sessions_text(sessions_text)
 
     def _format_plan(self, plan: PracticeReviewPlan) -> str:
         pieces = [plan.note]

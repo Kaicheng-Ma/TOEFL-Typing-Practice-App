@@ -784,15 +784,23 @@ class VocabularyPromptGenerator:
     def __init__(self, seed: int | None = None) -> None:
         self._rng = Random(seed)
 
-    def generate(self, preferred_topic: str = "", preferred_prompt_type: str = "") -> VocabularyPrompt:
+    def generate(
+        self,
+        preferred_topic: str = "",
+        preferred_prompt_type: str = "",
+        preferred_word: str = "",
+    ) -> VocabularyPrompt:
         """Return a question that matches one of the supported prompt styles."""
 
-        eligible_items = [
-            item
-            for item in VOCABULARY_ITEMS
-            if (not preferred_topic or item.topic == preferred_topic)
-            and (not preferred_prompt_type or preferred_prompt_type in item.prompt_types)
-        ]
+        if preferred_word:
+            eligible_items = [item for item in VOCABULARY_ITEMS if item.word == preferred_word]
+        else:
+            eligible_items = [
+                item
+                for item in VOCABULARY_ITEMS
+                if (not preferred_topic or item.topic == preferred_topic)
+                and (not preferred_prompt_type or preferred_prompt_type in item.prompt_types)
+            ]
         if not eligible_items:
             eligible_items = list(VOCABULARY_ITEMS)
         item = self._rng.choice(eligible_items)

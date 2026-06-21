@@ -22,10 +22,10 @@ from ..services.timed_challenge_scoring import TimedChallengeResult, score_timed
 class TimedChallengeFrame(ttk.Frame):
     """Interactive timed challenge panel."""
 
-    def __init__(self, master: tk.Widget) -> None:
+    def __init__(self, master: tk.Widget, history_store: PracticeHistoryStore | None = None) -> None:
         super().__init__(master, padding=16)
         self.generator = TimedChallengePromptGenerator()
-        self.history = PracticeHistoryStore(get_data_dir())
+        self.history = history_store or PracticeHistoryStore(get_data_dir())
         self.current_prompt: TimedChallengePrompt | None = None
         self.started_at: float | None = None
         self.time_limit_seconds = 60

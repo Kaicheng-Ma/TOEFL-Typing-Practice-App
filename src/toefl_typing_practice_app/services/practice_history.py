@@ -1,7 +1,7 @@
 """Local practice history storage.
 
-This module persists session-level records in a single JSON file so the app can
-build lightweight personalization and review suggestions without needing a full
+This module persists session-level records in an account-specific JSON file so
+each learner keeps separate history and review suggestions without needing a
 database yet.
 """
 
@@ -18,10 +18,13 @@ from ..models import PracticeMode, PracticeReviewPlan, PracticeSessionRecord
 class PracticeHistoryStore:
     """Persist and retrieve practice session history locally."""
 
-    def __init__(self, data_dir: Path) -> None:
+    def __init__(self, data_dir: Path, account_slug: str = "shared") -> None:
         self.data_dir = data_dir
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.file_path = self.data_dir / "practice_history.json"
+        self.account_slug = account_slug
+        self.account_dir = self.data_dir / "accounts" / self.account_slug
+        self.account_dir.mkdir(parents=True, exist_ok=True)
+        self.file_path = self.account_dir / "practice_history.json"
 
     def load_sessions(self) -> list[PracticeSessionRecord]:
         """Return all stored sessions, newest last."""
