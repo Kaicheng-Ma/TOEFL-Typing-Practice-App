@@ -43,6 +43,18 @@ class VocabularyPrompt:
 
 
 @dataclass(slots=True)
+class TimedChallengePrompt:
+    """A challenge prompt used in the timed practice mode."""
+
+    prompt_id: str
+    challenge_type: str
+    title: str
+    text: str
+    target_count: int
+
+
+
+@dataclass(slots=True)
 class PracticeSessionSummary:
     """Summary for one completed practice session."""
 
@@ -64,6 +76,19 @@ class VocabularySessionSummary:
     total_questions: int = 0
     correct_answers: int = 0
     wrong_answers: int = 0
+
+
+@dataclass(slots=True)
+class TimedChallengeSummary:
+    """Summary for one timed challenge session."""
+
+    challenge_type: str
+    time_limit_seconds: int
+    elapsed_seconds: float
+    total_units: int
+    completed_units: int
+    accuracy: float
+    score: int
 
 
 @dataclass(slots=True)
