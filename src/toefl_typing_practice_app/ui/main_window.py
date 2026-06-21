@@ -26,7 +26,9 @@ class MainWindow(ttk.Frame):
         self.master = master
         self.config = config
         self.mode_views: dict[PracticeMode, ttk.Frame] = {}
+        self.current_practice_mode = PracticeMode.ESSAY_TYPING
         self._build_layout()
+        self._bind_shortcuts()
 
     def _build_layout(self) -> None:
         self.columnconfigure(1, weight=1)
@@ -64,7 +66,7 @@ class MainWindow(ttk.Frame):
         content = ttk.Frame(self, relief="groove", padding=16)
         content.grid(row=1, column=1, sticky="nsew", pady=(16, 0))
         content.columnconfigure(0, weight=1)
-        content.rowconfigure(3, weight=1)
+        content.rowconfigure(4, weight=1)
 
         ttk.Label(content, text="Current Stage", font=("Segoe UI", 11, "bold")).grid(
             row=0, column=0, sticky="w"
@@ -89,15 +91,25 @@ class MainWindow(ttk.Frame):
         )
         self.context_label.grid(row=2, column=0, sticky="nw", pady=(0, 12))
 
+        # Short hint text reduces the need to discover shortcuts by trial and error.
+        self.shortcut_label = ttk.Label(
+            content,
+            text="Shortcuts: Ctrl+1/2/3 switch modes, Ctrl+4 review, Ctrl+5 stats, Esc return to practice.",
+            wraplength=520,
+            justify="left",
+            foreground="#666666",
+        )
+        self.shortcut_label.grid(row=3, column=0, sticky="nw", pady=(0, 12))
+
         self.content_host = ttk.Frame(content)
-        self.content_host.grid(row=3, column=0, sticky="nsew")
+        self.content_host.grid(row=4, column=0, sticky="nsew")
         self.content_host.columnconfigure(0, weight=1)
         self.content_host.rowconfigure(0, weight=1)
 
         self._build_mode_views()
-        self.review_view = ReviewCenterFrame(self.content_host)
+        self.review_view = ReviewCenterFrame(self.content_host, on_resume=self.resume_practice)
         self.review_view.grid(row=0, column=0, sticky="nsew")
-        self.stats_view = StatsDashboardFrame(self.content_host)
+        self.stats_view = StatsDashboardFrame(self.content_host, on_resume=self.resume_practice)
         self.stats_view.grid(row=0, column=0, sticky="nsew")
         self.show_mode(PracticeMode.ESSAY_TYPING)
 
@@ -141,6 +153,7 @@ class MainWindow(ttk.Frame):
     def show_mode(self, mode: PracticeMode) -> None:
         """Raise the selected mode frame to the top of the content host."""
 
+        self.current_practice_mode = mode
         view = self.mode_views.get(mode)
         if view is not None:
             view.tkraise()
@@ -162,6 +175,31 @@ class MainWindow(ttk.Frame):
         self.stats_view.tkraise()
         self.stage_label.configure(text="Stage 6: statistics and UX polish are now active.")
         self.context_label.configure(text="Inspect overall accuracy, mode balance, and recent trend data.")
+
+    def resume_practice(self) -> None:
+        """Return to the most recently selected practice mode."""
+
+        self.show_mode(self.current_practice_mode)
+
+    def _bind_shortcuts(self) -> None:
+        """Register global shortcuts for quick mode switching and navigation."""
+
+        self.master.bind_all("<Control-1>", lambda _event: self._switch_mode_from_shortcut(PracticeMode.ESSAY_TYPING))
+        self.master.bind_all(
+            "<Control-2>", lambda _event: self._switch_mode_from_shortcut(PracticeMode.VOCABULARY_SPELLING)
+        )
+        self.master.bind_all(
+            "<Control-3>", lambda _event: self._switch_mode_from_shortcut(PracticeMode.TIMED_CHALLENGE)
+        )
+        self.master.bind_all("<Control-4>", lambda _event: self.show_review_center())
+        self.master.bind_all("<Control-5>", lambda _event: self.show_stats_dashboard())
+        self.master.bind_all("<Escape>", lambda _event: self.resume_practice())
+
+    def _switch_mode_from_shortcut(self, mode: PracticeMode) -> str:
+        """Switch modes from a keyboard shortcut and stop event bubbling."""
+
+        self.show_mode(mode)
+        return "break"
 
     @staticmethod
     def _stage_message(mode: PracticeMode) -> str:

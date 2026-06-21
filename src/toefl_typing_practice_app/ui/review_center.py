@@ -17,9 +17,10 @@ from ..services.practice_history import PracticeHistoryStore
 class ReviewCenterFrame(ttk.Frame):
     """A lightweight dashboard for review and personalization."""
 
-    def __init__(self, master: tk.Widget) -> None:
+    def __init__(self, master: tk.Widget, on_resume=None) -> None:
         super().__init__(master, padding=16)
         self.history = PracticeHistoryStore(get_data_dir())
+        self.on_resume = on_resume
         self._build_layout()
         self.refresh()
 
@@ -53,8 +54,15 @@ class ReviewCenterFrame(ttk.Frame):
         self.sessions_text.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
         self.sessions_text.configure(state="disabled")
 
-        self.refresh_button = ttk.Button(self.sessions_box, text="Refresh", command=self.refresh)
-        self.refresh_button.grid(row=2, column=0, sticky="e", pady=(10, 0))
+        button_bar = ttk.Frame(self.sessions_box)
+        button_bar.grid(row=2, column=0, sticky="ew", pady=(10, 0))
+        button_bar.columnconfigure(0, weight=1)
+
+        self.resume_button = ttk.Button(button_bar, text="Resume Practice", command=self._resume)
+        self.resume_button.grid(row=0, column=0, sticky="w")
+
+        self.refresh_button = ttk.Button(button_bar, text="Refresh", command=self.refresh)
+        self.refresh_button.grid(row=0, column=1, sticky="e")
 
     def refresh(self) -> None:
         """Reload the latest sessions and review plan from local history."""
@@ -96,3 +104,9 @@ class ReviewCenterFrame(ttk.Frame):
         self.sessions_text.delete("1.0", tk.END)
         self.sessions_text.insert("1.0", text)
         self.sessions_text.configure(state="disabled")
+
+    def _resume(self) -> None:
+        """Return to the practice view the user was most recently using."""
+
+        if self.on_resume is not None:
+            self.on_resume()

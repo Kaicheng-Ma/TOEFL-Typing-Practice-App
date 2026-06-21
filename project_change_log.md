@@ -94,3 +94,8 @@
 1. 在主窗口增加上下文提示行，帮助用户理解当前模式要做什么。
 2. 修正主内容区的行权重，使页面切换后内容区域能够正常拉伸。
 3. 为统计页和复习页补充少量解释性批注，方便后续维护和扩展。
+
+### Stage 6 Interaction Refinement
+1. Add global shortcuts for quick mode switching and direct access to review and stats pages.
+2. Add Resume Practice buttons to the review and stats pages so users can jump back immediately.
+3. Add a clearer context line on the main page and fix the content area layout weight after adding the new hint row.

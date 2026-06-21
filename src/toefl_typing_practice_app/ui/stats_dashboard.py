@@ -17,9 +17,10 @@ from ..services.practice_statistics import build_practice_statistics
 class StatsDashboardFrame(ttk.Frame):
     """Display overall performance and recent trends."""
 
-    def __init__(self, master: tk.Widget) -> None:
+    def __init__(self, master: tk.Widget, on_resume=None) -> None:
         super().__init__(master, padding=16)
         self.history = PracticeHistoryStore(get_data_dir())
+        self.on_resume = on_resume
         self._build_layout()
         self.refresh()
 
@@ -42,8 +43,15 @@ class StatsDashboardFrame(ttk.Frame):
         self.mode_box.grid(row=4, column=0, sticky="ew")
         self.mode_box.columnconfigure(0, weight=1)
 
-        self.refresh_button = ttk.Button(self, text="Refresh Stats", command=self.refresh)
-        self.refresh_button.grid(row=5, column=0, sticky="e", pady=(12, 0))
+        button_bar = ttk.Frame(self)
+        button_bar.grid(row=5, column=0, sticky="ew", pady=(12, 0))
+        button_bar.columnconfigure(0, weight=1)
+
+        self.resume_button = ttk.Button(button_bar, text="Resume Practice", command=self._resume)
+        self.resume_button.grid(row=0, column=0, sticky="w")
+
+        self.refresh_button = ttk.Button(button_bar, text="Refresh Stats", command=self.refresh)
+        self.refresh_button.grid(row=0, column=1, sticky="e")
 
     def refresh(self) -> None:
         """Reload history and rebuild all dashboard sections."""
@@ -95,3 +103,9 @@ class StatsDashboardFrame(ttk.Frame):
                 justify="left",
             )
             label.pack(anchor="w")
+
+    def _resume(self) -> None:
+        """Return to the latest practice mode after stats inspection."""
+
+        if self.on_resume is not None:
+            self.on_resume()
