@@ -42,8 +42,15 @@ class EssayPracticeFrame(ttk.Frame):
         self.title_label = ttk.Label(header, text="Essay Typing Mode", font=("Segoe UI", 14, "bold"))
         self.title_label.grid(row=0, column=0, sticky="w")
 
-        self.topic_label = ttk.Label(header, text="Topic: -")
+        self.topic_label = ttk.Label(header, text="Topic: -", foreground="#4d4d4d")
         self.topic_label.grid(row=1, column=0, sticky="w", pady=(4, 0))
+
+        self.prompt_state_label = ttk.Label(
+            header,
+            text="A new prompt will appear here each round.",
+            foreground="#6b6b6b",
+        )
+        self.prompt_state_label.grid(row=2, column=0, sticky="w", pady=(4, 0))
 
         controls = ttk.Frame(header)
         controls.grid(row=0, column=1, rowspan=2, sticky="e")
@@ -72,33 +79,36 @@ class EssayPracticeFrame(ttk.Frame):
         self.input_text.bind("<KeyRelease>", self._update_live_stats)
         self.input_text.bind("<Control-Return>", self._submit_from_keyboard)
 
-        stats_box = ttk.Frame(self)
-        stats_box.grid(row=3, column=0, sticky="ew", pady=(12, 0))
-        stats_box.columnconfigure(0, weight=1)
+        output_box = ttk.Frame(self)
+        output_box.grid(row=3, column=0, sticky="ew", pady=(12, 0))
+        output_box.columnconfigure(0, weight=1)
 
-        self.stats_label = ttk.Label(
-            stats_box,
-            text="Accuracy: -    WPM: -    Elapsed: -",
-        )
-        self.stats_label.grid(row=0, column=0, sticky="w")
+        self.summary_card = ttk.LabelFrame(output_box, text="Session Summary")
+        self.summary_card.grid(row=0, column=0, sticky="ew")
+        self.summary_card.columnconfigure(0, weight=1)
+
+        self.stats_label = ttk.Label(self.summary_card, text="Accuracy: -    WPM: -    Elapsed: -")
+        self.stats_label.grid(row=0, column=0, sticky="w", padx=8, pady=(8, 2))
 
         self.result_label = ttk.Label(
-            stats_box,
+            self.summary_card,
             text="Submit to see your result summary.",
             foreground="#444444",
             wraplength=860,
             justify="left",
         )
-        self.result_label.grid(row=1, column=0, sticky="w", pady=(8, 0))
+        self.result_label.grid(row=1, column=0, sticky="w", padx=8, pady=(4, 2))
+
+        ttk.Separator(self.summary_card).grid(row=2, column=0, sticky="ew", padx=8, pady=8)
 
         self.review_label = ttk.Label(
-            stats_box,
+            self.summary_card,
             text=self.review_plan.note,
             foreground="#2f4f4f",
             wraplength=860,
             justify="left",
         )
-        self.review_label.grid(row=2, column=0, sticky="w", pady=(8, 0))
+        self.review_label.grid(row=3, column=0, sticky="w", padx=8, pady=(0, 8))
 
     def start_new_prompt(self) -> None:
         """Generate a fresh prompt and reset the practice state."""
@@ -108,6 +118,7 @@ class EssayPracticeFrame(ttk.Frame):
         self.started_at = time.perf_counter()
         self._set_prompt_text(self.current_prompt.text)
         self.topic_label.configure(text=f"Topic: {self.current_prompt.title}")
+        self.prompt_state_label.configure(text="Focus on punctuation and sentence flow while you type.")
         self.result_label.configure(text="A fresh prompt is ready. Start typing when you are ready.")
         self.review_label.configure(text=self.review_plan.note)
         self.stats_label.configure(text="Accuracy: -    WPM: -    Elapsed: 0.0s")
@@ -141,6 +152,7 @@ class EssayPracticeFrame(ttk.Frame):
         self.stats_label.configure(text=summary)
         self.result_label.configure(text=detail)
         self.review_label.configure(text=self.review_plan.note)
+        self.prompt_state_label.configure(text="Round complete. Use New Prompt for another pass or review the feedback below.")
 
     def _set_prompt_text(self, text: str) -> None:
         self.prompt_text.configure(state="normal")

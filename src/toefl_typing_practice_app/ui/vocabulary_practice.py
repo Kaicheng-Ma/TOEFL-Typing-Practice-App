@@ -43,8 +43,15 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.title_label = ttk.Label(header, text="Vocabulary Spelling Mode", font=("Segoe UI", 14, "bold"))
         self.title_label.grid(row=0, column=0, sticky="w")
 
-        self.topic_label = ttk.Label(header, text="Topic: -")
+        self.topic_label = ttk.Label(header, text="Topic: -", foreground="#4d4d4d")
         self.topic_label.grid(row=1, column=0, sticky="w", pady=(4, 0))
+
+        self.prompt_type_label = ttk.Label(
+            header,
+            text="Prompt type: -",
+            foreground="#6b6b6b",
+        )
+        self.prompt_type_label.grid(row=2, column=0, sticky="w", pady=(4, 0))
 
         controls = ttk.Frame(header)
         controls.grid(row=0, column=1, rowspan=2, sticky="e")
@@ -63,6 +70,15 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.prompt_text.grid(row=0, column=0, sticky="nsew")
         self.prompt_text.configure(state="disabled")
 
+        self.example_label = ttk.Label(
+            prompt_box,
+            text="Example sentence will appear after the answer is checked.",
+            wraplength=860,
+            justify="left",
+            foreground="#666666",
+        )
+        self.example_label.grid(row=1, column=0, sticky="w", padx=8, pady=(8, 0))
+
         answer_box = ttk.LabelFrame(self, text="Your Answer")
         answer_box.grid(row=2, column=0, sticky="ew")
         answer_box.columnconfigure(0, weight=1)
@@ -76,26 +92,32 @@ class VocabularyPracticeFrame(ttk.Frame):
         stats_box.grid(row=3, column=0, sticky="ew", pady=(12, 0))
         stats_box.columnconfigure(0, weight=1)
 
-        self.stats_label = ttk.Label(stats_box, text="Accuracy: -    Correct: 0    Wrong: 0    Elapsed: -")
-        self.stats_label.grid(row=0, column=0, sticky="w")
+        self.summary_card = ttk.LabelFrame(stats_box, text="Session Summary")
+        self.summary_card.grid(row=0, column=0, sticky="ew")
+        self.summary_card.columnconfigure(0, weight=1)
+
+        self.stats_label = ttk.Label(self.summary_card, text="Accuracy: -    Correct: 0    Wrong: 0    Elapsed: -")
+        self.stats_label.grid(row=0, column=0, sticky="w", padx=8, pady=(8, 2))
 
         self.result_label = ttk.Label(
-            stats_box,
+            self.summary_card,
             text="Check your answer to see spelling feedback.",
             foreground="#444444",
             wraplength=860,
             justify="left",
         )
-        self.result_label.grid(row=1, column=0, sticky="w", pady=(8, 0))
+        self.result_label.grid(row=1, column=0, sticky="w", padx=8, pady=(4, 2))
+
+        ttk.Separator(self.summary_card).grid(row=2, column=0, sticky="ew", padx=8, pady=8)
 
         self.review_label = ttk.Label(
-            stats_box,
+            self.summary_card,
             text=self.review_plan.note,
             foreground="#2f4f4f",
             wraplength=860,
             justify="left",
         )
-        self.review_label.grid(row=2, column=0, sticky="w", pady=(8, 0))
+        self.review_label.grid(row=3, column=0, sticky="w", padx=8, pady=(0, 8))
 
     def start_new_prompt(self) -> None:
         """Generate a new vocabulary prompt and reset the answer box."""
@@ -108,9 +130,11 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.session_started_at = time.perf_counter()
         self._set_prompt_text(self.current_prompt.prompt_text)
         self.topic_label.configure(text=f"Topic: {self.current_prompt.topic}")
+        self.prompt_type_label.configure(text=f"Prompt type: {self.current_prompt.prompt_type.replace('_', ' ').title()}")
         self.answer_var.set("")
         self.answer_entry.focus_set()
         self.result_label.configure(text="A fresh vocabulary item is ready.")
+        self.example_label.configure(text="Example sentence: " + self.current_prompt.example)
         self.review_label.configure(text=self.review_plan.note)
         self._refresh_stats()
 
@@ -149,6 +173,8 @@ class VocabularyPracticeFrame(ttk.Frame):
         )
         self.result_label.configure(text=feedback)
         self.review_label.configure(text=self.review_plan.note)
+        self.prompt_type_label.configure(text=f"Prompt type: {self.current_prompt.prompt_type.replace('_', ' ').title()}")
+        self.example_label.configure(text="Example sentence: " + self.current_prompt.example)
         self._save_session(result, elapsed_seconds)
         return result
 

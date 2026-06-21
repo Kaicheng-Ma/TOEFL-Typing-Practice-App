@@ -99,3 +99,8 @@
 1. Add global shortcuts for quick mode switching and direct access to review and stats pages.
 2. Add Resume Practice buttons to the review and stats pages so users can jump back immediately.
 3. Add a clearer context line on the main page and fix the content area layout weight after adding the new hint row.
+
+### Stage 6 Page Polish
+1. Redesign essay, vocabulary, and timed challenge pages into clearer cards with stronger visual hierarchy.
+2. Upgrade review center and stats dashboard into labeled sections so the user can scan overview, history, and trend data more quickly.
+3. Add a visible shortcut hint row and a clearer prompt state area on the main practice page.

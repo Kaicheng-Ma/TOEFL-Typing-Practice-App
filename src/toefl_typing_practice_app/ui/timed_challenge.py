@@ -55,6 +55,14 @@ class TimedChallengeFrame(ttk.Frame):
         )
         self.info_label.grid(row=1, column=0, sticky="w", pady=(4, 0))
 
+        self.timer_label = ttk.Label(
+            header,
+            text="Time left: 00:00",
+            foreground="#8b4513",
+            font=("Segoe UI", 11, "bold"),
+        )
+        self.timer_label.grid(row=2, column=0, sticky="w", pady=(4, 0))
+
         controls = ttk.LabelFrame(self, text="Challenge Settings")
         controls.grid(row=1, column=0, sticky="ew", pady=(16, 12))
         controls.columnconfigure(1, weight=1)
@@ -105,6 +113,15 @@ class TimedChallengeFrame(ttk.Frame):
         self.prompt_text.grid(row=0, column=0, sticky="nsew")
         self.prompt_text.configure(state="disabled")
 
+        self.challenge_hint_label = ttk.Label(
+            prompt_box,
+            text="The score rewards both progress and accuracy, so steady typing usually beats rushing.",
+            wraplength=860,
+            justify="left",
+            foreground="#666666",
+        )
+        self.challenge_hint_label.grid(row=1, column=0, sticky="w", padx=8, pady=(8, 0))
+
         input_box = ttk.LabelFrame(self, text="Your Input")
         input_box.grid(row=4, column=0, sticky="nsew")
         input_box.columnconfigure(0, weight=1)
@@ -119,29 +136,35 @@ class TimedChallengeFrame(ttk.Frame):
         stats_box.grid(row=5, column=0, sticky="ew", pady=(12, 0))
         stats_box.columnconfigure(0, weight=1)
 
+        self.summary_card = ttk.LabelFrame(stats_box, text="Session Summary")
+        self.summary_card.grid(row=0, column=0, sticky="ew")
+        self.summary_card.columnconfigure(0, weight=1)
+
         self.stats_label = ttk.Label(
-            stats_box,
+            self.summary_card,
             text="Time Left: -    Completed: -    Score: -    Accuracy: -",
         )
-        self.stats_label.grid(row=0, column=0, sticky="w")
+        self.stats_label.grid(row=0, column=0, sticky="w", padx=8, pady=(8, 2))
 
         self.result_label = ttk.Label(
-            stats_box,
+            self.summary_card,
             text="The timed challenge summary will appear here after you submit.",
             foreground="#444444",
             wraplength=860,
             justify="left",
         )
-        self.result_label.grid(row=1, column=0, sticky="w", pady=(8, 0))
+        self.result_label.grid(row=1, column=0, sticky="w", padx=8, pady=(4, 2))
+
+        ttk.Separator(self.summary_card).grid(row=2, column=0, sticky="ew", padx=8, pady=8)
 
         self.review_label = ttk.Label(
-            stats_box,
+            self.summary_card,
             text=self.review_plan.note,
             foreground="#2f4f4f",
             wraplength=860,
             justify="left",
         )
-        self.review_label.grid(row=2, column=0, sticky="w", pady=(8, 0))
+        self.review_label.grid(row=3, column=0, sticky="w", padx=8, pady=(0, 8))
 
     def start_new_challenge(self) -> None:
         """Generate a new challenge prompt and start the timer."""
@@ -161,6 +184,9 @@ class TimedChallengeFrame(ttk.Frame):
         self.input_text.focus_set()
         self.result_label.configure(text="Challenge started. Type as much as you can before time expires.")
         self.review_label.configure(text=self.review_plan.note)
+        self.challenge_hint_label.configure(
+            text=f"Challenge mode: {self.current_prompt.title}. Focus on a steady pace and avoid unnecessary corrections."
+        )
         self._schedule_timer_tick()
         self._update_live_stats()
 
@@ -250,6 +276,7 @@ class TimedChallengeFrame(ttk.Frame):
                 f"Words: {word_count}"
             )
         )
+        self.timer_label.configure(text=f"Time left: {int(remaining // 60):02d}:{int(remaining % 60):02d}")
 
     def _submit_from_keyboard(self, event: tk.Event) -> str:
         self.submit_response()

@@ -29,19 +29,28 @@ class StatsDashboardFrame(ttk.Frame):
         self.rowconfigure(3, weight=1)
 
         ttk.Label(self, text="Stats Dashboard", font=("Segoe UI", 14, "bold")).grid(row=0, column=0, sticky="w")
-        self.summary_label = ttk.Label(self, text="", wraplength=860, justify="left")
-        self.summary_label.grid(row=1, column=0, sticky="w", pady=(8, 12))
+        self.summary_card = ttk.LabelFrame(self, text="Overview")
+        self.summary_card.grid(row=1, column=0, sticky="ew", pady=(8, 12))
+        self.summary_card.columnconfigure(0, weight=1)
 
-        self.metrics_box = ttk.Frame(self)
-        self.metrics_box.grid(row=2, column=0, sticky="ew")
+        self.summary_label = ttk.Label(self.summary_card, text="", wraplength=860, justify="left")
+        self.summary_label.grid(row=0, column=0, sticky="w", padx=8, pady=8)
+
+        self.trend_card = ttk.LabelFrame(self, text="Recent Trend")
+        self.trend_card.grid(row=2, column=0, sticky="ew")
+        self.trend_card.columnconfigure(0, weight=1)
+
+        self.trend_label = ttk.Label(self.trend_card, text="", wraplength=860, justify="left", foreground="#2f4f4f")
+        self.trend_label.grid(row=0, column=0, sticky="w", padx=8, pady=8)
+
+        self.mode_card = ttk.LabelFrame(self, text="Mode Breakdown")
+        self.mode_card.grid(row=3, column=0, sticky="nsew", pady=(12, 0))
+        self.mode_card.columnconfigure(0, weight=1)
+        self.mode_card.rowconfigure(0, weight=1)
+
+        self.metrics_box = ttk.Frame(self.mode_card)
+        self.metrics_box.grid(row=0, column=0, sticky="nsew", padx=8, pady=8)
         self.metrics_box.columnconfigure(0, weight=1)
-
-        self.trend_label = ttk.Label(self, text="", wraplength=860, justify="left", foreground="#2f4f4f")
-        self.trend_label.grid(row=3, column=0, sticky="nw", pady=(12, 10))
-
-        self.mode_box = ttk.Frame(self)
-        self.mode_box.grid(row=4, column=0, sticky="ew")
-        self.mode_box.columnconfigure(0, weight=1)
 
         button_bar = ttk.Frame(self)
         button_bar.grid(row=5, column=0, sticky="ew", pady=(12, 0))

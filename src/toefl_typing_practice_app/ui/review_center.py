@@ -29,33 +29,37 @@ class ReviewCenterFrame(ttk.Frame):
         self.rowconfigure(2, weight=1)
 
         ttk.Label(self, text="Review Center", font=("Segoe UI", 14, "bold")).grid(row=0, column=0, sticky="w")
+        self.plan_card = ttk.LabelFrame(self, text="Personalized Review")
+        self.plan_card.grid(row=1, column=0, sticky="ew", pady=(8, 12))
+        self.plan_card.columnconfigure(0, weight=1)
+
         self.plan_label = ttk.Label(
-            self,
+            self.plan_card,
             text="",
             wraplength=860,
             justify="left",
             foreground="#2f4f4f",
         )
-        self.plan_label.grid(row=1, column=0, sticky="w", pady=(8, 12))
+        self.plan_label.grid(row=0, column=0, sticky="w", padx=8, pady=8)
 
-        self.sessions_box = ttk.Frame(self)
-        self.sessions_box.grid(row=2, column=0, sticky="nsew")
-        self.sessions_box.columnconfigure(0, weight=1)
+        self.sessions_card = ttk.LabelFrame(self, text="Recent Sessions")
+        self.sessions_card.grid(row=2, column=0, sticky="nsew")
+        self.sessions_card.columnconfigure(0, weight=1)
 
         self.summary_label = ttk.Label(
-            self.sessions_box,
+            self.sessions_card,
             text="Recent sessions will appear here.",
             wraplength=860,
             justify="left",
         )
-        self.summary_label.grid(row=0, column=0, sticky="w")
+        self.summary_label.grid(row=0, column=0, sticky="w", padx=8, pady=(8, 4))
 
-        self.sessions_text = tk.Text(self.sessions_box, height=14, wrap="word", padx=8, pady=8)
-        self.sessions_text.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+        self.sessions_text = tk.Text(self.sessions_card, height=14, wrap="word", padx=8, pady=8)
+        self.sessions_text.grid(row=1, column=0, sticky="nsew", padx=8, pady=(6, 0))
         self.sessions_text.configure(state="disabled")
 
-        button_bar = ttk.Frame(self.sessions_box)
-        button_bar.grid(row=2, column=0, sticky="ew", pady=(10, 0))
+        button_bar = ttk.Frame(self.sessions_card)
+        button_bar.grid(row=2, column=0, sticky="ew", padx=8, pady=(10, 8))
         button_bar.columnconfigure(0, weight=1)
 
         self.resume_button = ttk.Button(button_bar, text="Resume Practice", command=self._resume)
