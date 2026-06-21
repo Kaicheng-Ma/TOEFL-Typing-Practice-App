@@ -1,0 +1,16 @@
+# Python build and runtime artifacts
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Local-only project guidance that should stay in this workspace
+LOCAL_IMPLEMENTATION_GUIDE.md
+
