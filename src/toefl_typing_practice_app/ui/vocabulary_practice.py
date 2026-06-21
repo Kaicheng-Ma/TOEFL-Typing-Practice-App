@@ -53,6 +53,13 @@ class VocabularyPracticeFrame(ttk.Frame):
         )
         self.prompt_type_label.grid(row=2, column=0, sticky="w", pady=(4, 0))
 
+        self.hint_label = ttk.Label(
+            header,
+            text="Hint: -",
+            foreground="#8b4513",
+        )
+        self.hint_label.grid(row=3, column=0, sticky="w", pady=(4, 0))
+
         controls = ttk.Frame(header)
         controls.grid(row=0, column=1, rowspan=2, sticky="e")
 
@@ -133,6 +140,7 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.prompt_type_label.configure(text=f"Prompt type: {self.current_prompt.prompt_type.replace('_', ' ').title()}")
         self.answer_var.set("")
         self.answer_entry.focus_set()
+        self.hint_label.configure(text=f"Hint: starts with '{self.current_prompt.prefix_hint}'")
         self.result_label.configure(text="A fresh vocabulary item is ready.")
         self.example_label.configure(text="Example sentence: " + self.current_prompt.example)
         self.review_label.configure(text=self.review_plan.note)
@@ -174,6 +182,7 @@ class VocabularyPracticeFrame(ttk.Frame):
         self.result_label.configure(text=feedback)
         self.review_label.configure(text=self.review_plan.note)
         self.prompt_type_label.configure(text=f"Prompt type: {self.current_prompt.prompt_type.replace('_', ' ').title()}")
+        self.hint_label.configure(text=f"Hint: starts with '{self.current_prompt.prefix_hint}'")
         self.example_label.configure(text="Example sentence: " + self.current_prompt.example)
         self._save_session(result, elapsed_seconds)
         return result

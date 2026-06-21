@@ -117,3 +117,8 @@
 - Clamped negative elapsed time and negative timed-challenge inputs to safer defaults.
 - Clamped nonpositive timed-challenge target counts to at least one item.
 - Verified the full test suite and compile check after the hardening pass.
+
+### Vocabulary Hint Softening - 2026-06-21
+- Added a short prefix hint to every vocabulary prompt so spelling practice is less harsh and easier to start.
+- Exposed the prefix hint in the vocabulary practice UI as a dedicated hint line.
+- Added tests to confirm the prefix hint is always generated and matches the answer start.

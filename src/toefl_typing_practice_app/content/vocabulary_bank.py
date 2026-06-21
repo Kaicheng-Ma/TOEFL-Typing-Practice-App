@@ -108,12 +108,14 @@ class VocabularyPromptGenerator:
             prompt_type = preferred_prompt_type
         else:
             prompt_type = self._rng.choice(prompt_type_pool)
+        prefix_hint = self._build_prefix_hint(item.word)
         prompt_text = self._build_prompt_text(item, prompt_type)
         return VocabularyPrompt(
             prompt_id=str(uuid4()),
             prompt_type=prompt_type,
             topic=item.topic,
             prompt_text=prompt_text,
+            prefix_hint=prefix_hint,
             answer=item.word,
             meaning=item.meaning,
             example=item.example,
@@ -134,3 +136,15 @@ class VocabularyPromptGenerator:
     def _build_cloze(example: str, answer: str) -> str:
         lower_example = example
         return lower_example.replace(answer, "_____", 1)
+
+    @staticmethod
+    def _build_prefix_hint(word: str) -> str:
+        """Return a short opening fragment that still leaves room to recall the full word."""
+
+        if len(word) <= 6:
+            prefix_length = 1
+        elif len(word) <= 9:
+            prefix_length = 2
+        else:
+            prefix_length = 3
+        return word[:prefix_length]

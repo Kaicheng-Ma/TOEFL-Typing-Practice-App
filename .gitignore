@@ -10,7 +10,7 @@ __pycache__/
 .venv/
 venv/
 env/
+data/
 
 # Local-only project guidance that should stay in this workspace
 LOCAL_IMPLEMENTATION_GUIDE.md
-

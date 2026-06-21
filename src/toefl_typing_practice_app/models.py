@@ -37,6 +37,7 @@ class VocabularyPrompt:
     prompt_type: str
     topic: str
     prompt_text: str
+    prefix_hint: str
     answer: str
     meaning: str
     example: str
@@ -133,4 +134,3 @@ class PracticeReviewPlan:
     vocab_topic: str = ""
     vocab_prompt_type: str = ""
     challenge_type: str = ""
-

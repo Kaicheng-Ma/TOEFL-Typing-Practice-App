@@ -29,6 +29,8 @@ class GeneratorAndScoringTests(unittest.TestCase):
         )
         self.assertEqual(prompt.topic, "academic_discussion")
         self.assertEqual(prompt.prompt_type, "meaning_to_word")
+        self.assertTrue(prompt.prefix_hint)
+        self.assertTrue(prompt.answer.startswith(prompt.prefix_hint))
         self.assertTrue(prompt.prompt_text)
 
     def test_timed_challenge_generator_returns_consistent_prompt(self) -> None:
