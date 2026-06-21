@@ -13,6 +13,7 @@ from ..config import AppConfig
 from ..models import PracticeMode
 from .essay_practice import EssayPracticeFrame
 from .vocabulary_practice import VocabularyPracticeFrame
+from .timed_challenge import TimedChallengeFrame
 
 
 class MainWindow(ttk.Frame):
@@ -100,9 +101,9 @@ class MainWindow(ttk.Frame):
         vocabulary_view.grid(row=0, column=0, sticky="nsew")
         self.mode_views[PracticeMode.VOCABULARY_SPELLING] = vocabulary_view
 
-        timed_placeholder = self._build_placeholder_view(PracticeMode.TIMED_CHALLENGE)
-        timed_placeholder.grid(row=0, column=0, sticky="nsew")
-        self.mode_views[PracticeMode.TIMED_CHALLENGE] = timed_placeholder
+        timed_view = TimedChallengeFrame(self.content_host)
+        timed_view.grid(row=0, column=0, sticky="nsew")
+        self.mode_views[PracticeMode.TIMED_CHALLENGE] = timed_view
 
     def _build_placeholder_view(self, mode: PracticeMode) -> ttk.Frame:
         """Return a temporary placeholder panel for modes not yet implemented."""
@@ -131,7 +132,7 @@ class MainWindow(ttk.Frame):
             return "Stage 2: essay typing practice is active and ready for text generation, typing, and scoring."
         if mode == PracticeMode.VOCABULARY_SPELLING:
             return "Stage 3: vocabulary spelling practice is now active alongside essay typing."
-        return "Stage 4 will add the timed challenge workflow on top of essay typing."
+        return "Stage 4: timed challenge practice is now active with time limits and score-based feedback."
 
     @staticmethod
     def _mode_label(mode: PracticeMode) -> str:

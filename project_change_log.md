@@ -64,3 +64,8 @@
 1. 新建 `content/timed_challenge_bank.py`，为计时挑战提供内容冲刺和条目冲刺的题库。
 2. 新建 `services/timed_challenge_scoring.py`，为计时挑战提供统一的计分和完成量统计逻辑。
 3. 扩展 `models.py`，加入计时挑战题目与结果摘要的数据结构。
+
+### Stage 4 计时挑战 UI 接入
+1. 新建 `ui/timed_challenge.py`，提供计时挑战的时间限制、题目切换、实时统计和提交结果界面。
+2. 重写 `ui/main_window.py`，让主窗口把 Timed Challenge 入口切换到真实可用的计时挑战面板。
+3. 使用 `python -m compileall src` 验证新增计时挑战界面可正常编译。
